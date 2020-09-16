@@ -1,4 +1,4 @@
-# Web Engineering 2019-2020 / URL Shortener
+# Web Engineering 2020-2021 / URL Shortener
 
 [![Build Status](https://travis-ci.org/UNIZAR-30246-WebEngineering/UrlShortener.svg?branch=master)](https://travis-ci.org/UNIZAR-30246-WebEngineering/UrlShortener)
 
@@ -11,10 +11,15 @@ The __project__ is a [Spring Boot](http://docs.spring.io/spring-boot/docs/curren
 * __Database service__: Persistence and retrieval of `ShortURL` and `Click` objects.
 
 
-The application can be run as follows:
+The application can be run in Linux and macOS as follows:
 
 ```
-$ gradle bootRun
+$ ./gradlew bootRun
+```
+or in Windows
+
+```
+$ gradle.bat bootRun
 ```
 
 Gradle will compile project and then run it
@@ -43,7 +48,7 @@ $ curl -v -d "url=http://www.unizar.es/" -X POST http://localhost:8080/link
 "safe":true,"ip":"0:0:0:0:0:0:0:1","country":null}%
 ```
 
-And now, we can navigate to the shortened URL.
+Now, we can navigate to the shortened URL.
 
 ```bash
 $ curl -v http://localhost:8080/6bb9db44
