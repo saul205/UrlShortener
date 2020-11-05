@@ -5,6 +5,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import urlshortener.domain.Click;
 import urlshortener.repository.ClickRepository;
+import urlshortener.repository.impl.Tuple;
+import java.util.List;
 
 @Service
 public class ClickService {
@@ -25,4 +27,15 @@ public class ClickService {
         "[" + hash + "] was not saved");
   }
 
+  public List<Tuple> getTopN(int n){
+    return clickRepository.topN(n);
+  }
+
+  public Long clicksByHash(String hash){
+    return clickRepository.clicksByHash(hash);
+  }
+
+  public Long count(){
+    return clickRepository.count();
+  }
 }

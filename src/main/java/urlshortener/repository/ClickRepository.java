@@ -1,7 +1,9 @@
 package urlshortener.repository;
 
 import java.util.List;
+import java.util.HashMap;
 import urlshortener.domain.Click;
+import urlshortener.repository.impl.Tuple;
 
 public interface ClickRepository {
 
@@ -20,4 +22,6 @@ public interface ClickRepository {
   Long count();
 
   List<Click> list(Long limit, Long offset);
+
+  List<Tuple> topN(int n);
 }
