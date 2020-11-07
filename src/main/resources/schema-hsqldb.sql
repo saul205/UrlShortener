@@ -14,8 +14,10 @@ CREATE TABLE SHORTURL
     OWNER   VARCHAR(255),            -- User id
     MODE    INTEGER,                 -- Redirect mode
     SAFE    BOOLEAN,                 -- Safe target
+    ALCANZABLE INTEGER,               -- Alcanzable
     IP      VARCHAR(20),             -- IP
-    COUNTRY VARCHAR(50)              -- Country
+    COUNTRY VARCHAR(50),             -- Country
+    URI     VARCHAR(1024)
 );
 
 -- Click
