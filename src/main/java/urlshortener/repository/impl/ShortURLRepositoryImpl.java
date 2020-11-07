@@ -88,12 +88,16 @@ public class ShortURLRepositoryImpl implements ShortURLRepository{
 
   @Override
   public void update(ShortURL su) {
+    String uri;
+    if(su.getUri() == null) uri = null;
+    else uri = su.getUri().toString();
     try {
       jdbc.update(
-          "update shorturl set target=?, sponsor=?, created=?, owner=?, mode=?, safe=?, ip=?, country=? where hash=?",
+          "update shorturl set target=?, sponsor=?, created=?, owner=?, "+
+          "mode=?, safe=?, ip=?, country=?, uri=?, alcanzable=?  where hash=?",
           su.getTarget(), su.getSponsor(), su.getCreated(),
           su.getOwner(), su.getMode(), su.getSafe(), su.getIP(),
-          su.getCountry(), su.getHash());
+          su.getCountry(), uri, su.getAlcanzable(), su.getHash());
     } catch (Exception e) {
       log.debug("When update for hash {}", su.getHash(), e);
     }
@@ -138,17 +142,6 @@ public class ShortURLRepositoryImpl implements ShortURLRepository{
     } catch (Exception e) {
       log.debug("When select for target " + target, e);
       return Collections.emptyList();
-    }
-  }
-
-  @Override
-  public void setAlcanzableByHash(String hash, Integer alcanzable){
-    try {
-      jdbc.update(
-          "update shorturl set alcanzable=? where hash=?",
-          alcanzable, hash);
-    } catch (Exception e) {
-      log.debug("When updating alcanzabilidad a " + alcanzable + " for hash {}", hash, e);
     }
   }
 }

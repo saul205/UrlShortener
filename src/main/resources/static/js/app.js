@@ -12,7 +12,7 @@ $(document).ready(
                             "<div class='alert alert-success lead'><a target='_blank' href='"
                             + msg.uri
                             + "'>"
-                            + msg.uri
+                            + msg.uri + " " + msg.safe
                             + "</a></div>");
                     },
                     error: function () {

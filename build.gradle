@@ -21,6 +21,10 @@ dependencies {
 
     implementation 'commons-validator:commons-validator:1.6'
     implementation 'com.google.guava:guava:28.1-jre'
+    implementation 'com.google.zxing:core:3.3.0'
+    implementation 'com.google.zxing:javase:3.3.0'
+
+    runtime 'org.springdoc:springdoc-openapi-ui:1.2.32'
 
     runtime 'org.webjars:bootstrap:3.3.5'
     runtime 'org.webjars:jquery:2.1.4'
@@ -28,6 +32,7 @@ dependencies {
     runtime 'org.hsqldb:hsqldb'
 
     compile group: 'com.googlecode.json-simple', name: 'json-simple', version: '1.1'
+    compile group: 'org.json', name: 'json', version: '20200518'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.apache.httpcomponents:httpclient'

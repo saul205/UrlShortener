@@ -72,6 +72,10 @@ public class ShortURL {
   public ShortURL() {
   }
 
+  public void setAlcanzable(Integer a){
+    this.alcanzable = a;
+  }
+
   public String getHash() {
     return hash;
   }
