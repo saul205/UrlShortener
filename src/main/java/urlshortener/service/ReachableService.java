@@ -1,6 +1,7 @@
 package urlshortener.service;
 
 import java.net.UnknownHostException;
+import java.net.SocketTimeoutException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
@@ -31,22 +32,29 @@ public class ReachableService {
       // setFollowRedirects -> SecurityException
       HttpURLConnection.setFollowRedirects(false);
       huc = (HttpURLConnection) url.openConnection();
+      huc.setConnectTimeout(10000);
       huc.getResponseCode();
       rble = true;
     } catch(UnknownHostException u) {
       rble = false;
+    } catch(SocketTimeoutException s) {
+      rble = false;
     } catch(Exception e1) { // SecurityException || IOException
       try{
         url = new URL(surl.getTarget());
+        HttpURLConnection.setFollowRedirects(true); // By default
         huc = (HttpURLConnection) url.openConnection();
+        huc.setConnectTimeout(10000);
         huc.getResponseCode();
         rble = true;
-      } catch (Exception e2){ //IOException or unknown exception
+      } catch (Exception e2){ //SocketTimeoutException, IOException or unknown exception
         rble = false;
       }
-    } finally { // <------------------------------------------------------ ACTUALIZAR EN BBDD
-      // <------------------------------------------------------ ACTUALIZAR EN BBDD
-    }
+    } 
+    Integer r;
+    if (rble) r = 1;
+    else r = -1;
+    shortURLRepository.setAlcanzableByHash(surl.getHash(), r);
     return rble;
   }
 }
