@@ -29,15 +29,17 @@ public class ReachableService {
     try {
       url = new URL(surl.getTarget());
       // setFollowRedirects -> SecurityException
-	    HttpURLConnection.setFollowRedirects(false);
-	    huc = (HttpURLConnection) url.openConnection();
+      HttpURLConnection.setFollowRedirects(false);
+      huc = (HttpURLConnection) url.openConnection();
+      huc.getResponseCode();
       rble = true;
     } catch(UnknownHostException u) {
       rble = false;
     } catch(Exception e1) { // SecurityException || IOException
       try{
         url = new URL(surl.getTarget());
-	      huc = (HttpURLConnection) url.openConnection();
+        huc = (HttpURLConnection) url.openConnection();
+        huc.getResponseCode();
         rble = true;
       } catch (Exception e2){ //IOException or unknown exception
         rble = false;
