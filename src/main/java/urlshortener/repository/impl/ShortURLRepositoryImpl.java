@@ -13,15 +13,17 @@ import org.springframework.stereotype.Repository;
 import urlshortener.domain.ShortURL;
 import urlshortener.repository.ShortURLRepository;
 
+import java.net.URI;
+
 @Repository
-public class ShortURLRepositoryImpl implements ShortURLRepository {
+public class ShortURLRepositoryImpl implements ShortURLRepository{
 
   private static final Logger log = LoggerFactory
       .getLogger(ShortURLRepositoryImpl.class);
 
   private static final RowMapper<ShortURL> rowMapper =
       (rs, rowNum) -> new ShortURL(rs.getString("hash"), rs.getString("target"),
-          null, rs.getString("sponsor"), rs.getDate("created"),
+          rs.getString("uri"), rs.getString("sponsor"), rs.getDate("created"),
           rs.getString("owner"), rs.getInt("mode"),
           rs.getBoolean("safe"), rs.getString("ip"),
           rs.getString("country"), rs.getInt("alcanzable"));
@@ -46,11 +48,17 @@ public class ShortURLRepositoryImpl implements ShortURLRepository {
   @Override
   public ShortURL save(ShortURL su) {
     try {
-      jdbc.update("INSERT INTO shorturl VALUES (?,?,?,?,?,?,?,?,?,?)",
+      String uri;
+      if(su.getUri() == null){
+        uri = null;
+      }else {
+        uri = su.getUri().toString();
+      }
+      jdbc.update("INSERT INTO shorturl VALUES (?,?,?,?,?,?,?,?,?,?,?)",
           su.getHash(), su.getTarget(), su.getSponsor(),
           su.getCreated(), su.getOwner(), su.getMode(), su.getSafe(),
           su.getAlcanzable(),
-          su.getIP(), su.getCountry());
+          su.getIP(), su.getCountry(), uri);
     } catch (DuplicateKeyException e) {
       log.debug("When insert for key {}", su.getHash(), e);
       return su;

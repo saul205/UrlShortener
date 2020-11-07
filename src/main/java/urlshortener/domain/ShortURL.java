@@ -33,6 +33,26 @@ public class ShortURL {
     this.alcanzable = 0;
   }
 
+  public ShortURL(String hash, String target, String uri, String sponsor,
+                  Date created, String owner, Integer mode, Boolean safe, String ip,
+                  String country, Integer alcanzable){
+    this.hash = hash;
+    this.target = target;
+    try{
+      this.uri = new URI(uri);
+    }catch(Exception e){
+      this.uri = null;
+    }
+    this.sponsor = sponsor;
+    this.created = created;
+    this.owner = owner;
+    this.mode = mode;
+    this.safe = safe;
+    this.ip = ip;
+    this.country = country;
+    this.alcanzable = 0;
+  }
+
   public ShortURL(String hash, String target, URI uri, String sponsor,
                   Date created, String owner, Integer mode, Boolean safe, String ip,
                   String country, Integer alcanzable) {
