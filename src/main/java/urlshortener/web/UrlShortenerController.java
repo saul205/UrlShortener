@@ -6,6 +6,7 @@ import org.apache.commons.validator.routines.UrlValidator;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -14,6 +15,10 @@ import org.springframework.web.bind.annotation.RestController;
 import urlshortener.domain.ShortURL;
 import urlshortener.service.ClickService;
 import urlshortener.service.ShortURLService;
+import urlshortener.service.ReachableService;
+import urlshortener.service.QRGenerator;
+
+import java.awt.image.BufferedImage;
 
 @RestController
 public class UrlShortenerController {
@@ -21,9 +26,12 @@ public class UrlShortenerController {
 
   private final ClickService clickService;
 
-  public UrlShortenerController(ShortURLService shortUrlService, ClickService clickService) {
+  private final ReachableService reachableService;
+
+  public UrlShortenerController(ShortURLService shortUrlService, ClickService clickService, ReachableService reachableService) {
     this.shortUrlService = shortUrlService;
     this.clickService = clickService;
+    this.reachableService = reachableService;
   }
 
   @RequestMapping(value = "/{id:(?!link|index).*}", method = RequestMethod.GET)
@@ -45,11 +53,37 @@ public class UrlShortenerController {
                                             HttpServletRequest request) {
     UrlValidator urlValidator = new UrlValidator(new String[] {"http",
         "https"});
+    
     if (urlValidator.isValid(url)) {
       ShortURL su = shortUrlService.save(url, sponsor, request.getRemoteAddr());
       HttpHeaders h = new HttpHeaders();
       h.setLocation(su.getUri());
+      
+      // Reachable
+      new Thread(() -> {
+        reachableService.isReachable(su.getHash());
+      }).start();
+
       return new ResponseEntity<>(su, h, HttpStatus.CREATED);
+    } else {
+      return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+    }
+
+    
+  }
+
+  @RequestMapping(value = "/qr", method = RequestMethod.GET, 
+                  produces = MediaType.IMAGE_PNG_VALUE)
+  public ResponseEntity<BufferedImage> generateQR(@RequestParam("hashUS") String hash){
+    ShortURL su = shortUrlService.findByKey(hash);
+    if (su != null){
+      String toQR = su.getUri().toString();
+      try {
+        BufferedImage image = QRGenerator.generateQRImage(toQR);
+        return new ResponseEntity<>(image, HttpStatus.OK);
+      } catch (Exception e){
+        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+      }
     } else {
       return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }

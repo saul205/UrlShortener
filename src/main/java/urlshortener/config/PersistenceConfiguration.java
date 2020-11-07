@@ -8,6 +8,10 @@ import urlshortener.repository.ShortURLRepository;
 import urlshortener.repository.impl.ClickRepositoryImpl;
 import urlshortener.repository.impl.ShortURLRepositoryImpl;
 
+import org.springframework.http.converter.BufferedImageHttpMessageConverter;
+import org.springframework.http.converter.HttpMessageConverter;
+import java.awt.image.BufferedImage;
+
 @Configuration
 public class PersistenceConfiguration {
 
@@ -26,5 +30,10 @@ public class PersistenceConfiguration {
   ClickRepository clickRepository() {
     return new ClickRepositoryImpl(jdbc);
   }
+
+  @Bean
+	public HttpMessageConverter<BufferedImage> createImageHttpMessageConverter() {
+	    return new BufferedImageHttpMessageConverter();
+	}
 
 }
