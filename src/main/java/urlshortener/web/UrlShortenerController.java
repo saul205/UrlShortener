@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.core.io.FileSystemResource;
 
 import jdk.internal.net.http.common.Pair;
 import urlshortener.domain.Click;
@@ -22,9 +24,12 @@ import urlshortener.service.ClickService;
 import urlshortener.service.ShortURLService;
 import urlshortener.service.ReachableService;
 import urlshortener.service.QRGenerator;
+import urlshortener.service.CSVGenerator;
 
+import java.util.ArrayList;
 import java.awt.image.BufferedImage;
 import java.util.List;
+import java.io.File;
 
 import org.json.simple.JSONObject;
 import org.json.simple.JSONArray;
@@ -72,7 +77,9 @@ public class UrlShortenerController {
       new Thread(() -> {
         reachableService.isReachable(su.getHash());
       }).start();
-      shortUrlService.checkSafe(new ShortURL[] {su});
+      new Thread(() -> {
+        shortUrlService.checkSafe(new ShortURL[] {su});
+      }).start();
 
       return new ResponseEntity<>(su, h, HttpStatus.CREATED);
     } else {
@@ -145,4 +152,16 @@ public class UrlShortenerController {
     }
     return new ResponseEntity<>(json, HttpStatus.OK);
   }
+
+  @RequestMapping(value = "/csv", method = RequestMethod.POST, produces = "text/csv")
+  public ResponseEntity handleFileUpload(@RequestParam("file") MultipartFile file,
+                                  HttpServletRequest request) {
+    ArrayList<String> lines = CSVGenerator.readCSV(file);
+		File csv = CSVGenerator.writeCSV(lines, request.getRemoteAddr(), shortUrlService); 
+		return ResponseEntity.ok()
+                .header("Content-Disposition", "attachment; filename=ShortURL.csv")
+                .contentLength(csv.length())
+                .contentType(MediaType.parseMediaType("text/csv"))
+                .body(new FileSystemResource(csv));
+	}
 }
