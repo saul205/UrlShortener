@@ -17,7 +17,6 @@ import org.springframework.stereotype.Repository;
 import urlshortener.domain.Click;
 import urlshortener.repository.ClickRepository;
 
-
 @Repository
 public class ClickRepositoryImpl implements ClickRepository {
 
@@ -149,6 +148,19 @@ public class ClickRepositoryImpl implements ClickRepository {
       log.debug("When counting hash " + hash, e);
     }
     return -1L;
+  }
+
+  @Override
+  public List<Tuple> topN(int n){
+    try {
+      return jdbc
+          .query("select s.target, count(*) as c from click, shorturl as s where s.hash = click.hash GROUP BY s.target ORDER BY c DESC LIMIT " + n,
+          (rs, rowNum) -> new Tuple(rs.getString("target"), rs.getLong("c"))
+          );
+    } catch (Exception e) {
+      log.debug("When getting top n", e);
+    }
+    return Collections.emptyList();
   }
 
 }

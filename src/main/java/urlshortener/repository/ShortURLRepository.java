@@ -21,4 +21,5 @@ public interface ShortURLRepository {
 
   List<ShortURL> list(Long limit, Long offset);
 
+  void setAlcanzableByHash(String hash, Integer alcanzable);
 }
