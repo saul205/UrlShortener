@@ -59,6 +59,7 @@ public class UrlShortenerController {
       ShortURL su = shortUrlService.save(url, sponsor, request.getRemoteAddr());
       HttpHeaders h = new HttpHeaders();
       h.setLocation(su.getUri());
+      shortUrlService.checkSafe(new ShortURL[] {su});
       return new ResponseEntity<>(su, h, HttpStatus.CREATED);
     } else {
       return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
