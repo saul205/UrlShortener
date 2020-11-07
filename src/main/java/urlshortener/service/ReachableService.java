@@ -13,10 +13,14 @@ import urlshortener.domain.ShortURL;
 import urlshortener.repository.ShortURLRepository;
 import urlshortener.web.UrlShortenerController;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 @Service
 public class ReachableService {
 
   private final ShortURLRepository shortURLRepository;
+  private static final Logger logger = LoggerFactory.getLogger(ShortURLBuilder.class);
 
   public ReachableService(ShortURLRepository shortURLRepository) {
     this.shortURLRepository = shortURLRepository;
@@ -54,7 +58,8 @@ public class ReachableService {
     Integer r;
     if (rble) r = 1;
     else r = -1;
-    shortURLRepository.setAlcanzableByHash(surl.getHash(), r);
+    surl.setAlcanzable(r);
+    shortURLRepository.update(surl);
     return rble;
   }
 }

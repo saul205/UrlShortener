@@ -47,8 +47,4 @@ public class ShortURLService {
   public Long count(){
     return shortURLRepository.count();
   }
-
-  public void setAlcanzable(String hash, Integer alcanzable){
-    shortURLRepository.setAlcanzableByHash(hash, alcanzable);
-  }
 }

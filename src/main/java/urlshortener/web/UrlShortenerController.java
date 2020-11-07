@@ -70,7 +70,7 @@ public class UrlShortenerController {
 
       // Reachable
       new Thread(() -> {
-        reachableService.isReachable(su.getHash());
+        shortUrlService.isReachable(su.getHash());
       }).start();
 
       return new ResponseEntity<>(su, h, HttpStatus.CREATED);
