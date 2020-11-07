@@ -14,6 +14,7 @@ CREATE TABLE SHORTURL
     OWNER   VARCHAR(255),            -- User id
     MODE    INTEGER,                 -- Redirect mode
     SAFE    BOOLEAN,                 -- Safe target
+    ALCANZABLE INTEGER,
     IP      VARCHAR(20),             -- IP
     COUNTRY VARCHAR(50)              -- Country
 );

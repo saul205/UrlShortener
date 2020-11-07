@@ -105,6 +105,9 @@ public class UrlShortenerController {
       json.put("target", target);
       json.put("hash", u.getHash());
       json.put("count", count);
+
+      //TODO Quitar
+      json.put("alcanzable", u.getAlcanzable());
     }
     return new ResponseEntity<>(json, HttpStatus.OK);
   }
