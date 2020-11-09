@@ -70,6 +70,9 @@ public class DbController {
 
   @RequestMapping(value = "/search", method = RequestMethod.POST)
  	public ResponseEntity<JSONObject> getTargetCount(@RequestParam("url") String target){
+
+		if(target == "") return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+
 		List<ShortURL> urls = shortUrlService.findByTarget(target);
 		JSONObject json = new JSONObject();
 
