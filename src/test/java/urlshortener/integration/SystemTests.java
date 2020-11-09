@@ -75,7 +75,7 @@ public class SystemTests {
   public void testRedirection() throws Exception {
     postLink("http://example.com/");
 
-    Thread.sleep(100);
+    Thread.sleep(1000);
 
     ResponseEntity<String> entity = restTemplate.getForEntity("/f684a3c4", String.class);
     assertThat(entity.getStatusCode(), is(HttpStatus.TEMPORARY_REDIRECT));
@@ -89,6 +89,15 @@ public class SystemTests {
     ResponseEntity<String> entity = restTemplate.getForEntity("/f684a3c4", String.class);
     assertThat(entity.getStatusCode(), is(HttpStatus.OK));
     assertThat(entity.getBody(), is("No se sabe si la url es alcanzable o no, intente en un rato"));
+  }
+
+  @Test
+  public void testRedirectionNotAvailable() throws Exception {
+    postLink("http://noexiste.es/");
+
+    ResponseEntity<String> entity = restTemplate.getForEntity("/295d6175", String.class);
+    assertThat(entity.getStatusCode(), is(HttpStatus.OK));
+    assertThat(entity.getBody(), is("La url no es alcanzable"));
   }
 
   private ResponseEntity<String> postLink(String url) {
