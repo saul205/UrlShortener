@@ -10,6 +10,8 @@
             type="text/javascript"></script>
     <script src="js/app.js" type="text/javascript">
     </script>
+    <script src="js/db.js" type="text/javascript">
+    </script>
 </head>
 <body>
 <div class="container-full">
@@ -17,7 +19,7 @@
         <div class="col-lg-12 text-center">
             <h1>URL Shortener</h1>
             <p class="lead">A front-end example page for the project</p>
-            <br>
+            <br/>
             <form action="" class="col-lg-12" id="shortener" role="form">
                 <div class="input-group input-group-lg col-sm-offset-4 col-sm-4">
                     <input class="center-block form-control input-lg" name="url"
@@ -32,17 +34,40 @@
         <div class="col-lg-12 text-center">
             <div class="col-sm-offset-4 col-sm-4 text-center">
                 <br/>
-                <div id="result"/>
+                <div id="result"></div>
             </div>
         </div>
     </div>
-    <form method="POST" action="/csv" enctype="multipart/form-data">
-        <div class="form-group mt-3">
-            <label for="file">Select a CSV file</label>
-            <input type="file" name="file" class="form-control-file" id="file" accept=".csv">
+    <div class="row" style="padding-left: 10%;">
+        <div class="col-lg-12">
+            <br/>
+            <div id="db"></div>
+            <form action="" id="search">
+                Introduce una url para buscar el número de redirecciones<br>
+                <input id="searchField" type="url">
+                <button type="submit">Buscar</button>
+            </form>
         </div>
-        <button type="submit" class="btn btn-primary">Import Users</button>
-    </form>
+    </div>
+    <div class="row">
+        <div class="col-lg-12 text-center">
+            <div class="col-sm-offset-4 col-sm-4 text-center">
+                <br/>
+                <div id="searchResult"></div>
+            </div>
+        </div>
+    </div>
+    <div class="row" style="padding-left: 10%;">
+        <div class="col-lg-12">
+            <form method="POST" action="/csv" enctype="multipart/form-data">
+                <div class="form-group mt-3">
+                    <label for="file">Select a CSV file</label>
+                    <input type="file" name="file" class="form-control-file" id="file" accept=".csv">
+                </div>
+                <button type="submit" class="btn btn-primary">Import Users</button>
+            </form>
+        </div>
+    </div>
 </div>
 </body>
 </html>

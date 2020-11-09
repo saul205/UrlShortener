@@ -120,43 +120,6 @@ public class UrlShortenerController {
     return new ResponseEntity<>(h, HttpStatus.valueOf(l.getMode()));
   }
 
-  @RequestMapping(value = "/db", method = RequestMethod.GET)
-  public ResponseEntity<JSONObject> getData(){
-    List<Tuple> urls = clickService.getTopN(10);
-
-    JSONObject obj = new JSONObject();
-    JSONObject mainObj = new JSONObject();
-
-    for(Tuple u : urls){
-     obj.put(u.getKey(), u.getValue());
-    }
-
-    mainObj.put("clicks", clickService.count());
-    mainObj.put("urls", shortUrlService.count());
-    mainObj.put("top", obj);
-
-    return new ResponseEntity<>(mainObj, HttpStatus.OK);
-  }
-
-  @RequestMapping(value = "/db/search", method = RequestMethod.POST)
-  public ResponseEntity<JSONObject> getTargetCount(@RequestParam("url") String target){
-    List<ShortURL> urls = shortUrlService.findByTarget(target);
-
-    JSONObject json = new JSONObject();
-
-    String clkText = "";
-    for(ShortURL u : urls){
-      Long count = clickService.clicksByHash(u.getHash());
-      json.put("target", target);
-      json.put("hash", u.getHash());
-      json.put("count", count);
-
-      //TODO Quitar
-      json.put("alcanzable", u.getAlcanzable());
-    }
-    return new ResponseEntity<>(json, HttpStatus.OK);
-  }
-
   @RequestMapping(value = "/csv", method = RequestMethod.POST, produces = "text/csv")
   public ResponseEntity handleFileUpload(@RequestParam("file") MultipartFile file,
                                   HttpServletRequest request) {

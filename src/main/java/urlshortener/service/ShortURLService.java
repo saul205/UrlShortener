@@ -129,4 +129,8 @@ public class ShortURLService {
       }
     }
   }
+
+  public List<ShortURL> getLastNByIp(String Ip, Integer n){
+    return shortURLRepository.lastNByIp(Ip, n);
+  }
 }

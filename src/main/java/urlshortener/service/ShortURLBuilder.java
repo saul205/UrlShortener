@@ -5,7 +5,7 @@ import static com.google.common.hash.Hashing.murmur3_32;
 
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
-import java.sql.Date;
+import java.sql.Timestamp;
 import java.util.UUID;
 import java.util.function.Function;
 import org.springframework.http.HttpStatus;
@@ -17,7 +17,7 @@ public class ShortURLBuilder {
   private String target;
   private URI uri;
   private String sponsor;
-  private Date created;
+  private Timestamp created;
   private String owner;
   private Integer mode;
   private Boolean safe;
@@ -56,7 +56,7 @@ public class ShortURLBuilder {
   }
 
   ShortURLBuilder createdNow() {
-    this.created = new Date(System.currentTimeMillis());
+    this.created = new Timestamp(System.currentTimeMillis());
     return this;
   }
 
