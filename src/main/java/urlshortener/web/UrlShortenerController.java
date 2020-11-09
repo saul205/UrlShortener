@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.core.io.FileSystemResource;
 
-import jdk.internal.net.http.common.Pair;
 import urlshortener.domain.Click;
 import urlshortener.domain.ShortURL;
 import urlshortener.repository.ClickRepository;
