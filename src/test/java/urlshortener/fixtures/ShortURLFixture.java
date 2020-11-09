@@ -40,7 +40,17 @@ public class ShortURLFixture {
   }
 
   public static ShortURL someUrl() {
-    return new ShortURL("someKey", "http://example.com/", null, null, null,
-        null, 307, true, null, null);
+    return new ShortURL("someKey", "http://example.com/", "", null, null,
+        null, 307, true, null, null, 1);
+  }
+
+  public static ShortURL someUrlNotAvailable() {
+    return new ShortURL("someKey", "http://example.com/", "", null, null,
+        null, 307, true, null, null, -1);
+  }
+
+  public static ShortURL someUrlNotYetAvailable() {
+    return new ShortURL("someKey", "http://example.com/", "", null, null,
+        null, 307, true, null, null, 0);
   }
 }

@@ -50,7 +50,7 @@ public class ShortURL {
     this.safe = safe;
     this.ip = ip;
     this.country = country;
-    this.alcanzable = 0;
+    this.alcanzable = alcanzable;
   }
 
   public ShortURL(String hash, String target, URI uri, String sponsor,

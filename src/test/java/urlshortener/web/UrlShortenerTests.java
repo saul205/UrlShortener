@@ -10,7 +10,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static urlshortener.fixtures.ShortURLFixture.someUrl;
+import static urlshortener.fixtures.ShortURLFixture.someUrlNotAvailable;
+import static urlshortener.fixtures.ShortURLFixture.someUrlNotYetAvailable;
 
 
 import java.net.URI;
@@ -46,13 +49,33 @@ public class UrlShortenerTests {
   }
 
   @Test
-  public void thatRedirectToReturnsTemporaryRedirectIfKeyExists()
+  public void thatRedirectToReturnsTemporaryRedirectIfKeyExistsAndAvailable()
       throws Exception {
     when(shortUrlService.findByKey("someKey")).thenReturn(someUrl());
 
     mockMvc.perform(get("/{id}", "someKey")).andDo(print())
         .andExpect(status().isTemporaryRedirect())
         .andExpect(redirectedUrl("http://example.com/"));
+  }
+
+  @Test
+  public void thatRedirectToReturnsTemporaryRedirectIfKeyExistsAndNotYetAvailable()
+      throws Exception {
+    when(shortUrlService.findByKey("someKey")).thenReturn(someUrlNotYetAvailable());
+
+    mockMvc.perform(get("/{id}", "someKey")).andDo(print())
+        .andExpect(status().isOk())
+        .andExpect(content().string("No se sabe si la url es alcanzable o no, intente en un rato"));
+  }
+
+  @Test
+  public void thatRedirectToReturnsTemporaryRedirectIfKeyExistsAndNotAvailable()
+      throws Exception {
+    when(shortUrlService.findByKey("someKey")).thenReturn(someUrlNotAvailable());
+
+    mockMvc.perform(get("/{id}", "someKey")).andDo(print())
+        .andExpect(status().isOk())
+        .andExpect(content().string("La url no es alcanzable"));
   }
 
   @Test
