@@ -95,6 +95,8 @@ public class SystemTests {
   public void testRedirectionNotAvailable() throws Exception {
     postLink("http://noexiste.es/");
 
+    Thread.sleep(1000);
+
     ResponseEntity<String> entity = restTemplate.getForEntity("/295d6175", String.class);
     assertThat(entity.getStatusCode(), is(HttpStatus.OK));
     assertThat(entity.getBody(), is("La url no es alcanzable"));
