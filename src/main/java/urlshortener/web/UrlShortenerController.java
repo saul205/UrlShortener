@@ -43,7 +43,7 @@ public class UrlShortenerController {
     this.reachableService = reachableService;
   }
 
-  @RequestMapping(value = "/{id:(?!link|index).*}", method = RequestMethod.GET)
+  @RequestMapping(value = "/{id:(?!link|index|sh).*}", method = RequestMethod.GET)
   public ResponseEntity<?> redirectTo(@PathVariable String id,
                                       HttpServletRequest request) {
     ShortURL l = shortUrlService.findByKey(id);
@@ -99,6 +99,21 @@ public class UrlShortenerController {
     }
   }
 
+  @RequestMapping(value = "/stid", method = RequestMethod.GET)
+  public ResponseEntity<JSONObject> getStatsURL(@RequestParam("id") String id){
+    ShortURL su = shortUrlService.findByKey(id);
+    if (su != null){
+      JSONObject json = new JSONObject();
+      json.put("id", id);
+      json.put("alcanzable", su.getAlcanzable());
+      json.put("segura", su.getSafe());
+      return new ResponseEntity<>(json, HttpStatus.OK);
+    } else {
+      return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+    }
+
+  }
+
   private String extractIP(HttpServletRequest request) {
     return request.getRemoteAddr();
   }
@@ -142,6 +157,7 @@ public class UrlShortenerController {
 
       //TODO Quitar
       json.put("alcanzable", u.getAlcanzable());
+      json.put("segura", u.getSafe());
     }
     return new ResponseEntity<>(json, HttpStatus.OK);
   }
