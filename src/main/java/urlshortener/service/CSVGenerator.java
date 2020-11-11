@@ -37,18 +37,23 @@ public class CSVGenerator {
         return lines;
     }
 
-    public static File writeCSV(ArrayList<String> lines, String ip, ShortURLService sus) {
+    public static ArrayList<Object> writeCSV(ArrayList<String> lines, String ip, ShortURLService sus) {
+        ArrayList<Object> pair = new ArrayList<Object>();
         File f = new File("ShortURL.csv");
         try (FileWriter fw = new FileWriter(f)) {
+            ArrayList<ShortURL> sh = new ArrayList<ShortURL>();
 	        for(String l : lines) {
                 ShortURL su = sus.save(l, "", ip);
-                fw.write(l + "," + su.getUri().toString() + "\n");
+                String aux = su.getUri().toString();
+                fw.write(l + "," + aux.substring(0, aux.lastIndexOf("/")) + "/sh.html?id=" + su.getHash() + "\n");
+                sh.add(su);
             }
+            pair.add(sh);
         } catch(Exception e) {
             e.printStackTrace();
         }
-
-        return f;
+        pair.add(f);
+        return pair;
     }
 
 }
