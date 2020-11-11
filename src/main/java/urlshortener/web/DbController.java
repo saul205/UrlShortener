@@ -64,7 +64,7 @@ public class DbController {
 		mainObj.put("clicks", clickService.count());
 		mainObj.put("urls", shortUrlService.count());
 		mainObj.put("top", obj);
-
+		
 		return new ResponseEntity<>(mainObj, HttpStatus.OK);
   }
 

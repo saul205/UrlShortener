@@ -11,6 +11,7 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 
 import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.ReadContext;
+import java.util.HashMap;
 import java.net.URI;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -75,7 +76,7 @@ public class SystemTests {
   public void testRedirection() throws Exception {
     postLink("http://example.com/");
 
-    Thread.sleep(1000);
+    Thread.sleep(500);
 
     ResponseEntity<String> entity = restTemplate.getForEntity("/f684a3c4", String.class);
     assertThat(entity.getStatusCode(), is(HttpStatus.TEMPORARY_REDIRECT));
@@ -95,11 +96,94 @@ public class SystemTests {
   public void testRedirectionNotAvailable() throws Exception {
     postLink("http://noexiste.es/");
 
-    Thread.sleep(1000);
+    Thread.sleep(500);
 
     ResponseEntity<String> entity = restTemplate.getForEntity("/295d6175", String.class);
     assertThat(entity.getStatusCode(), is(HttpStatus.OK));
     assertThat(entity.getBody(), is("La url no es alcanzable"));
+  }
+
+  @Test
+  public void testDB() throws Exception {
+    postLink("http://example.com/");
+
+    ResponseEntity<String> entity = restTemplate.getForEntity("/db", String.class);
+    assertThat(entity.getStatusCode(), is(HttpStatus.OK));
+    assertThat(entity.getHeaders().getContentType(), is(new MediaType("application", "json")));
+    ReadContext rc = JsonPath.parse(entity.getBody());
+    assertThat(rc.read("$.clicks"), is(0));
+    assertThat(rc.read("$.urls"), is(2));
+    assertThat(rc.read("$.top"), is(new HashMap()));
+  }
+
+  @Test
+  public void testDBWithRedirects() throws Exception {
+
+    postLink("http://example.com/");
+    postLink("http://google.com/");
+
+    Thread.sleep(500);
+
+    ResponseEntity<String> entity1 = restTemplate.getForEntity("/f684a3c4", String.class);
+    assertThat(entity1.getStatusCode(), is(HttpStatus.TEMPORARY_REDIRECT));
+    assertThat(entity1.getHeaders().getLocation(), is(new URI("http://example.com/")));
+
+    entity1 = restTemplate.getForEntity("/5e399431", String.class);
+    assertThat(entity1.getStatusCode(), is(HttpStatus.TEMPORARY_REDIRECT));
+    assertThat(entity1.getHeaders().getLocation(), is(new URI("http://google.com/")));
+
+    entity1 = restTemplate.getForEntity("/5e399431", String.class);
+    assertThat(entity1.getStatusCode(), is(HttpStatus.TEMPORARY_REDIRECT));
+    assertThat(entity1.getHeaders().getLocation(), is(new URI("http://google.com/")));
+
+    ResponseEntity<String> entity = restTemplate.getForEntity("/db", String.class);
+    assertThat(entity.getStatusCode(), is(HttpStatus.OK));
+    assertThat(entity.getHeaders().getContentType(), is(new MediaType("application", "json")));
+    ReadContext rc = JsonPath.parse(entity.getBody());
+    assertThat(rc.read("$.clicks"), is(4));
+    assertThat(rc.read("$.urls"), is(3));
+    HashMap top = new HashMap();
+    top.put("http://example.com/", 1);
+    HashMap top2 = new HashMap();
+    top2.put("http://google.com/", 3);
+    assertThat(rc.read("$.top.0"), is(top2));
+    assertThat(rc.read("$.top.1"), is(top));
+  }
+
+  @Test
+  public void testDBSearch() throws Exception {
+
+    postLink("http://google.com/");
+
+    Thread.sleep(500);
+
+    ResponseEntity<String> entity1 = restTemplate.getForEntity("/5e399431", String.class);
+    assertThat(entity1.getStatusCode(), is(HttpStatus.TEMPORARY_REDIRECT));
+    assertThat(entity1.getHeaders().getLocation(), is(new URI("http://google.com/")));
+
+    MultiValueMap<String, Object> parts = new LinkedMultiValueMap<>();
+    parts.add("url", "http://google.com/");
+    ResponseEntity<String> entity = restTemplate.postForEntity("/db/search", parts, String.class);
+    assertThat(entity.getStatusCode(), is(HttpStatus.OK));
+    assertThat(entity.getHeaders().getContentType(), is(new MediaType("application", "json")));
+    ReadContext rc = JsonPath.parse(entity.getBody());
+    assertThat(rc.read("$.hash"), is("5e399431"));
+    assertThat(rc.read("$.target"), is("http://google.com/"));
+    assertThat(rc.read("$.count"), is(1));
+  }
+
+  @Test
+  public void testDBHistory() throws Exception {
+
+    ResponseEntity<String> entity = restTemplate.getForEntity("/db/history", String.class);
+    assertThat(entity.getStatusCode(), is(HttpStatus.OK));
+    assertThat(entity.getHeaders().getContentType(), is(new MediaType("application", "json")));
+    ReadContext rc = JsonPath.parse(entity.getBody());
+    HashMap h = rc.read("$.0", HashMap.class);
+    assertThat(h.keySet().toArray()[0], is("http://example.com/"));
+
+    h = rc.read("$.1", HashMap.class);
+    assertThat(h.keySet().toArray()[0], is("http://google.com/"));
   }
 
   private ResponseEntity<String> postLink(String url) {
@@ -107,6 +191,5 @@ public class SystemTests {
     parts.add("url", url);
     return restTemplate.postForEntity("/link", parts, String.class);
   }
-
 
 }
