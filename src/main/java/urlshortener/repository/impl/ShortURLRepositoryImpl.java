@@ -10,6 +10,7 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
+
 import urlshortener.domain.ShortURL;
 import urlshortener.repository.ShortURLRepository;
 
@@ -23,7 +24,7 @@ public class ShortURLRepositoryImpl implements ShortURLRepository{
 
   private static final RowMapper<ShortURL> rowMapper =
       (rs, rowNum) -> new ShortURL(rs.getString("hash"), rs.getString("target"),
-          rs.getString("uri"), rs.getString("sponsor"), rs.getDate("created"),
+          rs.getString("uri"), rs.getString("sponsor"), rs.getTimestamp("created"),
           rs.getString("owner"), rs.getInt("mode"),
           rs.getBoolean("safe"), rs.getString("ip"),
           rs.getString("country"), rs.getInt("alcanzable"));
@@ -61,6 +62,11 @@ public class ShortURLRepositoryImpl implements ShortURLRepository{
           su.getIP(), su.getCountry(), uri);
     } catch (DuplicateKeyException e) {
       log.debug("When insert for key {}", su.getHash(), e);
+      try{
+        jdbc.update("UPDATE shorturl SET created=? WHERE hash=?", new Object[]{su.getCreated(), su.getHash()});
+      }catch(Exception e2){
+        log.debug("When updating on DuplicateKey");
+      }
       return su;
     } catch (Exception e) {
       log.debug("When insert", e);
@@ -76,10 +82,11 @@ public class ShortURLRepositoryImpl implements ShortURLRepository{
     try {
       jdbc.update("UPDATE shorturl SET safe=? WHERE hash=?", safeness,
           su.getHash());
-      ShortURL res = new ShortURL();
-      BeanUtils.copyProperties(su, res);
-      new DirectFieldAccessor(res).setPropertyValue("safe", safeness);
-      return res;
+      return new ShortURL(
+        su.getHash(), su.getTarget(), su.getUri(), su.getSponsor(),
+        su.getCreated(), su.getOwner(), su.getMode(), safeness,
+        su.getIP(), su.getCountry()
+      );
     } catch (Exception e) {
       log.debug("When update", e);
       return null;
@@ -141,6 +148,16 @@ public class ShortURLRepositoryImpl implements ShortURLRepository{
           new Object[] {target}, rowMapper);
     } catch (Exception e) {
       log.debug("When select for target " + target, e);
+      return Collections.emptyList();
+    }
+  }
+
+  @Override
+  public List<ShortURL> lastNByIp(String Ip, Integer n){
+    try {
+      return jdbc.query("SELECT * FROM shorturl WHERE ip=? ORDER BY created DESC LIMIT " + n, new Object[]{Ip}, rowMapper);
+    }catch(Exception e){
+      log.debug("When selecting last " + n + " shorted urls");
       return Collections.emptyList();
     }
   }

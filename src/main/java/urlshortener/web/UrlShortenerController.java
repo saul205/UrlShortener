@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.core.io.FileSystemResource;
 
-import jdk.internal.net.http.common.Pair;
 import urlshortener.domain.Click;
 import urlshortener.domain.ShortURL;
 import urlshortener.repository.ClickRepository;
@@ -52,10 +51,15 @@ public class UrlShortenerController {
   public ResponseEntity<?> redirectTo(@PathVariable String id,
                                       HttpServletRequest request) {
     ShortURL l = shortUrlService.findByKey(id);
-    if (l != null) {
+    if (l != null && l.getAlcanzable() == 1) {
       clickService.saveClick(id, extractIP(request));
       return createSuccessfulRedirectToResponse(l);
-    } else {
+    } else if(l != null && l.getAlcanzable() == 0){
+      return new ResponseEntity<String>("No se sabe si la url es alcanzable o no, intente en un rato", HttpStatus.OK);
+    }else if(l != null && l.getAlcanzable() == -1){
+      return new ResponseEntity<String>("La url no es alcanzable", HttpStatus.OK);
+    }
+    else{
       return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
   }
@@ -80,7 +84,7 @@ public class UrlShortenerController {
       new Thread(() -> {
         shortUrlService.checkSafe(new ShortURL[] {su});
       }).start();
-      
+
       return new ResponseEntity<>(su, h, HttpStatus.CREATED);
     } else {
       return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
@@ -173,7 +177,7 @@ public class UrlShortenerController {
   public ResponseEntity handleFileUpload(@RequestParam("file") MultipartFile file,
                                   HttpServletRequest request) {
     ArrayList<String> lines = CSVGenerator.readCSV(file);
-		File csv = CSVGenerator.writeCSV(lines, request.getRemoteAddr(), shortUrlService); 
+		File csv = CSVGenerator.writeCSV(lines, request.getRemoteAddr(), shortUrlService);
 		return ResponseEntity.ok()
                 .header("Content-Disposition", "attachment; filename=ShortURL.csv")
                 .contentLength(csv.length())

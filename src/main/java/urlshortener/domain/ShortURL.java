@@ -1,7 +1,7 @@
 package urlshortener.domain;
 
 import java.net.URI;
-import java.sql.Date;
+import java.sql.Timestamp;
 
 public class ShortURL {
 
@@ -9,7 +9,7 @@ public class ShortURL {
   private String target;
   private URI uri;
   private String sponsor;
-  private Date created;
+  private Timestamp created;
   private String owner;
   private Integer mode;
   private Boolean safe;
@@ -18,7 +18,7 @@ public class ShortURL {
   private Integer alcanzable;
 
   public ShortURL(String hash, String target, URI uri, String sponsor,
-                  Date created, String owner, Integer mode, Boolean safe, String ip,
+                  Timestamp created, String owner, Integer mode, Boolean safe, String ip,
                   String country) {
     this.hash = hash;
     this.target = target;
@@ -34,7 +34,7 @@ public class ShortURL {
   }
 
   public ShortURL(String hash, String target, String uri, String sponsor,
-                  Date created, String owner, Integer mode, Boolean safe, String ip,
+                  Timestamp created, String owner, Integer mode, Boolean safe, String ip,
                   String country, Integer alcanzable){
     this.hash = hash;
     this.target = target;
@@ -50,11 +50,11 @@ public class ShortURL {
     this.safe = safe;
     this.ip = ip;
     this.country = country;
-    this.alcanzable = 0;
+    this.alcanzable = alcanzable;
   }
 
   public ShortURL(String hash, String target, URI uri, String sponsor,
-                  Date created, String owner, Integer mode, Boolean safe, String ip,
+                  Timestamp created, String owner, Integer mode, Boolean safe, String ip,
                   String country, Integer alcanzable) {
     this.hash = hash;
     this.target = target;
@@ -88,7 +88,7 @@ public class ShortURL {
     return uri;
   }
 
-  public Date getCreated() {
+  public Timestamp getCreated() {
     return created;
   }
 

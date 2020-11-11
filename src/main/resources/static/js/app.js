@@ -9,7 +9,7 @@ $(document).ready(
                     data: $(this).serialize(),
                     success: function (msg) {
                         $("#result").html(
-                            "<div class='alert alert-success lead'><a target='_blank' href='"
+                            "<div class='alert alert-success lead'><a id=\"shorturl\" onclick=\"db()\" target='_blank' href='"
                             + msg.uri
                             + "'>"
                             + msg.uri + " " + msg.safe
