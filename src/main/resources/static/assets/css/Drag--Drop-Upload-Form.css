@@ -15,6 +15,14 @@
   border-radius: 10px;
 }
 
+#inputURL input::selection {
+  background: rgb(181,181,247);
+}
+
+#inputURL input::-moz-selection {
+  background: rgb(181,181,247);
+}
+
 #inputURL div {
   padding: 5px;
 }
@@ -51,16 +59,16 @@
   font-size: 2vw;
 }
 
-#top {
+#top, #history {
   margin-top: 5px;
   color: #bcbcbc;
 }
 
-#top h1 {
+#top h1, #history h1 {
   font-size: 4vw !important;
 }
 
-#top li {
+#top li, #history li {
   max-width: 300px;
   margin: auto;
   text-align: left;
@@ -132,6 +140,11 @@
 #qr {
   width: 240px;
   height: auto;
+}
+
+#redir {
+  margin: 10px 20px;
+  width: 240px;
 }
 
 input:focus, select:focus, textarea:focus, button:focus {

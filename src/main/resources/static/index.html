@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
-    <title>Home - Brand</title>
+    <title>URLShortener</title>
     <link rel="stylesheet" href="assets/bootstrap/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Cabin:700">
@@ -60,25 +60,31 @@
                 </div>
             </div>
             <div class="row">
-                <div class="col-md-12" id="top">
-                    <h1>top 10</h1><ol>
-    <li>jpoop.loqsea/qni1270sad</li>
-    <li>jpoop.loqsea/qni1270sad</li>
-    <li>jpoop.loqsea/qni1270sad</li>
+                <div class="col-md-12" id="history">
+                    <h1>Your historial</h1><ol id="history-list">
 </ol></div>
             </div>
             <div class="row">
                 <div class="col-md-6">
                     <h1>clicks</h1>
-                    <p>894618</p>
+                    <p id="clicks-int">0</p>
                 </div>
                 <div class="col-md-6">
                     <h1>URLs</h1>
-                    <p>8784864</p>
+                    <p id="urls-int">0</p>
                 </div>
             </div>
+            <div class="row">
+                <div class="col-md-12" id="top">
+                    <h1>top 10</h1><ol id="top-list" reversed>
+</ol></div>
+            </div>
         </div>
-    </div>
+    </div><form action="" id="search">
+    Introduce una url para buscar el número de redirecciones<br>
+    <input id="searchField" type="url">
+    <button type="submit">Buscar</button>
+</form>
     <footer>
         <div class="container text-center">
             <p>Copyright © Java =&nbsp;💩 2020</p>
@@ -89,8 +95,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-easing/1.4.1/jquery.easing.min.js"></script>
     <script src="assets/js/grayscale.js"></script>
     <script src="assets/js/drop.js"></script>
-    <script src="assets/js/info.js"></script>
-    <script src="assets/js/short.js"></script>
+    <script src="assets/js/index.js"></script>
+    <script src="assets/js/sh.js"></script>
 </body>
 
 </html>
