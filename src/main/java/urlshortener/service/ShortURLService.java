@@ -62,6 +62,11 @@ public class ShortURLService {
   }
 
   public void checkSafe(ShortURL urlShort[]) {
+    ArrayList<ShortURL> l = new ArrayList<>(Arrays.asList(urlShort));
+    checkSafe(l);
+  }
+
+  public void checkSafe(ArrayList<ShortURL> l) {
     String safeUrl = "https://safebrowsing.googleapis.com/v4/threatMatches:find?key=" + apiKey;
 
     HttpHeaders head = new HttpHeaders();
@@ -83,9 +88,9 @@ public class ShortURLService {
     types.put("MALWARE");
     types.put("SOCIAL_ENGINEERING");
     JSONArray entries = new JSONArray();
-    for(int i = 0; i < 500 && i < urlShort.length; ++i) {
+    for(int i = 0; i < 500 && i < l.size(); ++i) {
       JSONObject urls = new JSONObject();
-      urls.put("url", urlShort[i].getTarget());
+      urls.put("url", l.get(i).getTarget());
       entries.put(urls);
     }
 
@@ -106,7 +111,6 @@ public class ShortURLService {
 
     JSONObject resp = new JSONObject(response);
 
-    ArrayList<ShortURL> l = new ArrayList<>(Arrays.asList(urlShort));
     if(resp.has("matches")) {
       JSONArray iter = resp.getJSONArray("matches");
       for(int i = 0; i < iter.length(); ++i) {

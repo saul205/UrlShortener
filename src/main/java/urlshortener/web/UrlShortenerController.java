@@ -139,11 +139,23 @@ public class UrlShortenerController {
   public ResponseEntity handleFileUpload(@RequestParam("file") MultipartFile file,
                                   HttpServletRequest request) {
     ArrayList<String> lines = CSVGenerator.readCSV(file);
-		File csv = CSVGenerator.writeCSV(lines, request.getRemoteAddr(), shortUrlService);
-		return ResponseEntity.ok()
+		ArrayList<Object> csv = CSVGenerator.writeCSV(lines, request.getRemoteAddr(), shortUrlService);
+    if(csv.size() != 2) {
+      return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+    }
+    new Thread(() -> {
+      for(ShortURL su : (ArrayList<ShortURL>)csv.get(0)) {
+        reachableService.isReachable(su.getHash());
+      }
+    }).start();
+    new Thread(() -> {
+      shortUrlService.checkSafe((ArrayList<ShortURL>)csv.get(0));
+    }).start();
+    File ret = (File)csv.get(1);
+    return ResponseEntity.ok()
                 .header("Content-Disposition", "attachment; filename=ShortURL.csv")
-                .contentLength(csv.length())
+                .contentLength(ret.length())
                 .contentType(MediaType.parseMediaType("text/csv"))
-                .body(new FileSystemResource(csv));
+                .body(new FileSystemResource(ret));
 	}
 }
