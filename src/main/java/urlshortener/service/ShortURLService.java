@@ -126,12 +126,13 @@ public class ShortURLService {
       }
     }
 
-    if(l.size() > 0) {
+    // No hace falta ponerlas como true ya que es su valor por defecto
+    /*if(l.size() > 0) {
       for(int i = 0; i < l.size(); ++i) {
         ShortURL aux = l.get(i);
         shortURLRepository.mark(aux, true);
       }
-    }
+    }*/
   }
 
   public List<ShortURL> getLastNByIp(String Ip, Integer n){

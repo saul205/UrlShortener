@@ -28,6 +28,10 @@ import urlshortener.service.CSVGenerator;
 import java.util.ArrayList;
 import java.awt.image.BufferedImage;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.io.File;
 
 import org.json.simple.JSONObject;
@@ -41,10 +45,13 @@ public class UrlShortenerController {
 
   private final ReachableService reachableService;
 
+  private final ThreadPoolExecutor executor;
+
   public UrlShortenerController(ShortURLService shortUrlService, ClickService clickService, ReachableService reachableService) {
     this.shortUrlService = shortUrlService;
     this.clickService = clickService;
     this.reachableService = reachableService;
+    this.executor = (ThreadPoolExecutor) Executors.newCachedThreadPool();
   }
 
   @RequestMapping(value = "/{id:(?!link|index|sh).*}", method = RequestMethod.GET)
@@ -77,13 +84,18 @@ public class UrlShortenerController {
       HttpHeaders h = new HttpHeaders();
       h.setLocation(su.getUri());
 
-      // Reachable
-      new Thread(() -> {
+      executor.submit(() -> {
+        reachableService.isReachable(su.getHash());
+        ShortURL aux = shortUrlService.findByKey(su.getHash());
+        if(aux.getAlcanzable() == 1) 
+          shortUrlService.checkSafe(new ShortURL[] {su});
+      });
+      /*new Thread(() -> {
         reachableService.isReachable(su.getHash());
       }).start();
       new Thread(() -> {
         shortUrlService.checkSafe(new ShortURL[] {su});
-      }).start();
+      }).start();*/
 
       return new ResponseEntity<>(su, h, HttpStatus.CREATED);
     } else {
@@ -136,23 +148,46 @@ public class UrlShortenerController {
   }
 
   @RequestMapping(value = "/csv", method = RequestMethod.POST, produces = "text/csv")
-  public ResponseEntity handleFileUpload(@RequestParam("file") MultipartFile file,
+  public ResponseEntity<?> handleFileUpload(@RequestParam("file") MultipartFile file,
                                   HttpServletRequest request) {
     ArrayList<String> lines = CSVGenerator.readCSV(file);
-		ArrayList<Object> csv = CSVGenerator.writeCSV(lines, request.getRemoteAddr(), shortUrlService);
-    if(csv.size() != 2) {
+    if(lines == null) 
       return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-    }
-    new Thread(() -> {
+
+		ArrayList<Object> csv = CSVGenerator.writeCSV(lines, request.getRemoteAddr(), shortUrlService);
+
+    executor.submit(() -> {
+      ArrayList<ShortURL> su = (ArrayList<ShortURL>)csv.get(0);
+      CountDownLatch latch = new CountDownLatch(su.size());
+      ArrayList<ShortURL> check = new ArrayList<ShortURL>();
+      for(ShortURL s : su) {
+        executor.submit(() -> {
+          reachableService.isReachable(s.getHash());
+          ShortURL aux = shortUrlService.findByKey(s.getHash());
+          if(aux.getAlcanzable() == 1) check.add(aux);
+          latch.countDown();
+        });
+      }
+
+      try {
+        latch.await();
+      } catch(InterruptedException e) {
+        Thread.currentThread().interrupt();
+      }
+      
+      if(check.size() > 0) shortUrlService.checkSafe(check);
+    });
+
+    /*new Thread(() -> {
       for(ShortURL su : (ArrayList<ShortURL>)csv.get(0)) {
         reachableService.isReachable(su.getHash());
       }
     }).start();
     new Thread(() -> {
       shortUrlService.checkSafe((ArrayList<ShortURL>)csv.get(0));
-    }).start();
+    }).start();*/
     File ret = (File)csv.get(1);
-    return ResponseEntity.ok()
+    return ResponseEntity.created(URI.create("/csv"))
                 .header("Content-Disposition", "attachment; filename=ShortURL.csv")
                 .contentLength(ret.length())
                 .contentType(MediaType.parseMediaType("text/csv"))

@@ -16,6 +16,13 @@ import urlshortener.service.ShortURLService;
 
 public class CSVGenerator {
 
+    public static boolean checkCSV(String url) {
+        if(url.matches("^(https|http)://[A-Za-z0-9_\\.\\-~/]+$")) {
+            return true;
+        }
+        return false;
+    }
+
     public static ArrayList<String> readCSV(MultipartFile file) {
         ArrayList<String> lines = new ArrayList<String>();
         if (!file.isEmpty()) {
@@ -26,6 +33,10 @@ public class CSVGenerator {
                 String line = "";
                 int i = 0;
                 while ((line = br.readLine()) != null && i < 500) {
+                    if(!checkCSV(line)) {
+                        lines = null;
+                        break;
+                    }
                     lines.add(line);
                     ++i;
                 }
