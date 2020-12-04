@@ -2,13 +2,14 @@
 
 DROP TABLE CLICK IF EXISTS;
 DROP TABLE SHORTURL IF EXISTS;
+DROP TABLE HISTORIAL IF EXISTS;
 
 -- ShortURL
 
 CREATE TABLE SHORTURL
 (
     HASH    VARCHAR(30) PRIMARY KEY, -- Key
-    TARGET  VARCHAR(1024),           -- Original URL
+    TARGET  VARCHAR(1024),           -- Original URLcc
     SPONSOR VARCHAR(1024),           -- Sponsor URL
     CREATED TIMESTAMP,               -- Creation date
     OWNER   VARCHAR(255),            -- User id
@@ -32,4 +33,21 @@ CREATE TABLE CLICK
     PLATFORM VARCHAR(50),                                                 -- Platform
     IP       VARCHAR(20),                                                 -- IP
     COUNTRY  VARCHAR(50)                                                  -- Country
-)
+);
+
+-- History
+
+CREATE TABLE HISTORIAL
+(
+    HASH    VARCHAR(30) PRIMARY KEY, -- Key
+    TARGET  VARCHAR(1024),           -- Original URL
+    SPONSOR VARCHAR(1024),           -- Sponsor URL
+    CREATED TIMESTAMP,               -- Creation date
+    OWNER   VARCHAR(255),            -- User id
+    MODE    INTEGER,                 -- Redirect mode
+    SAFE    BOOLEAN,                 -- Safe target
+    ALCANZABLE INTEGER,               -- Alcanzable
+    IP      VARCHAR(20),             -- IP
+    COUNTRY VARCHAR(50),             -- Country
+    URI     VARCHAR(1024)
+);

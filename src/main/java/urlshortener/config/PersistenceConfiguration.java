@@ -5,8 +5,10 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.JdbcTemplate;
 import urlshortener.repository.ClickRepository;
 import urlshortener.repository.ShortURLRepository;
+import urlshortener.repository.HistoryRepository;
 import urlshortener.repository.impl.ClickRepositoryImpl;
 import urlshortener.repository.impl.ShortURLRepositoryImpl;
+import urlshortener.repository.impl.HistoryRepositoryImpl;
 
 import org.springframework.http.converter.BufferedImageHttpMessageConverter;
 import org.springframework.http.converter.HttpMessageConverter;
@@ -29,6 +31,11 @@ public class PersistenceConfiguration {
   @Bean
   ClickRepository clickRepository() {
     return new ClickRepositoryImpl(jdbc);
+  }
+
+  @Bean
+  HistoryRepository historyRepository() {
+    return new HistoryRepositoryImpl(jdbc);
   }
 
   @Bean

@@ -20,6 +20,7 @@ import urlshortener.domain.ShortURL;
 import urlshortener.repository.ClickRepository;
 import urlshortener.repository.impl.Tuple;
 import urlshortener.service.ClickService;
+import urlshortener.service.HistoryService;
 import urlshortener.service.ShortURLService;
 import urlshortener.service.ReachableService;
 import urlshortener.service.QRGenerator;
@@ -56,12 +57,15 @@ public class UrlShortenerController {
 
   private final ReachableService reachableService;
 
+  private final HistoryService historyService;
+
   private final ThreadPoolExecutor executor;
 
-  public UrlShortenerController(ShortURLService shortUrlService, ClickService clickService, ReachableService reachableService) {
+  public UrlShortenerController(ShortURLService shortUrlService, ClickService clickService, HistoryService historyService, ReachableService reachableService) {
     this.shortUrlService = shortUrlService;
     this.clickService = clickService;
     this.reachableService = reachableService;
+    this.historyService = historyService;
     this.executor = (ThreadPoolExecutor) Executors.newCachedThreadPool();
   }
 
@@ -112,6 +116,10 @@ public class UrlShortenerController {
         ShortURL aux = shortUrlService.findByKey(su.getHash());
         if(aux.getAlcanzable() == 1) 
           shortUrlService.checkSafe(new ShortURL[] {su});
+      });
+
+      executor.submit(() -> {
+        historyService.countByIp(su.getIP());
       });
       /*new Thread(() -> {
         reachableService.isReachable(su.getHash());
