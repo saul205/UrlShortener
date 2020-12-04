@@ -37,7 +37,7 @@ public class ShortURLService {
     return shortURLRepository.findByKey(id);
   }
 
-  public ShortURL save(String url, String sponsor, String ip) {
+  public ShortURL save(String url, String sponsor, String ip, Boolean qrres) {
     ShortURL su = ShortURLBuilder.newInstance()
         .target(url)
         .uri((String hash) -> linkTo(methodOn(UrlShortenerController.class).redirectTo(hash, null))
@@ -47,7 +47,8 @@ public class ShortURLService {
         .randomOwner()
         .temporaryRedirect()
         .treatAsSafe()
-        .qrResource("")
+        .qrResource(qrres, (String hash) -> linkTo(methodOn(UrlShortenerController.class)
+                                            .generateQR(hash)).toUri())
         .ip(ip)
         .unknownCountry()
         .build();

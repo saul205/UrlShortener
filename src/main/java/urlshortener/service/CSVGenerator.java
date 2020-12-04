@@ -54,7 +54,7 @@ public class CSVGenerator {
         try (FileWriter fw = new FileWriter(f)) {
             ArrayList<ShortURL> sh = new ArrayList<ShortURL>();
 	        for(String l : lines) {
-                ShortURL su = sus.save(l, "", ip);
+                ShortURL su = sus.save(l, "", ip, false);
                 String aux = su.getUri().toString();
                 fw.write(l + "," + aux.substring(0, aux.lastIndexOf("/")) + "/sh.html?id=" + su.getHash() + "\n");
                 sh.add(su);

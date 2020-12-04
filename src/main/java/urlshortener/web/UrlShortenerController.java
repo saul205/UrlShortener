@@ -75,12 +75,15 @@ public class UrlShortenerController {
   public ResponseEntity<ShortURL> shortener(@RequestParam("url") String url,
                                             @RequestParam(value = "sponsor", required = false)
                                                 String sponsor,
+                                             @RequestParam(value = "qr", required = false)
+                                                Boolean qr,
                                             HttpServletRequest request) {
     UrlValidator urlValidator = new UrlValidator(new String[] {"http",
         "https"});
 
     if (urlValidator.isValid(url)) {
-      ShortURL su = shortUrlService.save(url, sponsor, request.getRemoteAddr());
+      Boolean qrres = (qr == null ? false : qr);
+      ShortURL su = shortUrlService.save(url, sponsor, request.getRemoteAddr(), qrres);
       HttpHeaders h = new HttpHeaders();
       h.setLocation(su.getUri());
 
@@ -109,16 +112,24 @@ public class UrlShortenerController {
                   produces = MediaType.IMAGE_PNG_VALUE)
   public ResponseEntity<BufferedImage> generateQR(@RequestParam("hashUS") String hash){
     ShortURL su = shortUrlService.findByKey(hash);
-    if (su != null){
-      String toQR = su.getUri().toString();
-      try {
-        BufferedImage image = QRGenerator.generateQRImage(toQR);
-        return new ResponseEntity<>(image, HttpStatus.OK);
-      } catch (Exception e){
-        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-      }
-    } else {
+    if (su == null) {
       return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+    }
+    if (su.getAlcanzable() != 1){
+      return new ResponseEntity<>(HttpStatus.CONFLICT);
+    }
+    if (!su.getSafe()){
+      return new ResponseEntity<>(HttpStatus.CONFLICT);
+    }
+    if (su.getQR() == null) {
+      return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+    }
+    String toQR = su.getUri().toString();
+    try {
+      BufferedImage image = QRGenerator.generateQRImage(toQR);
+      return new ResponseEntity<>(image, HttpStatus.OK);
+    } catch (Exception e){
+      return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 

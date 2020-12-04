@@ -77,8 +77,9 @@ public class ShortURLBuilder {
     return this;
   }
 
-  ShortURLBuilder qrResource(String res) {
-    this.qr = res;
+  ShortURLBuilder qrResource(Boolean res, Function<String, URI> extractor) {
+    if (res) this.qr = extractor.apply(hash).toString();
+    else this.qr = null;
     return this;
   }
 
