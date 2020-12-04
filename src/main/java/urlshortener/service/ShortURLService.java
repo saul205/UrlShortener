@@ -47,6 +47,7 @@ public class ShortURLService {
         .randomOwner()
         .temporaryRedirect()
         .treatAsSafe()
+        .qrResource("")
         .ip(ip)
         .unknownCountry()
         .build();

@@ -21,6 +21,7 @@ public class ShortURLBuilder {
   private String owner;
   private Integer mode;
   private Boolean safe;
+  private String qr;
   private String ip;
   private String country;
 
@@ -38,6 +39,7 @@ public class ShortURLBuilder {
         owner,
         mode,
         safe,
+        qr,
         ip,
         country
     );
@@ -72,6 +74,11 @@ public class ShortURLBuilder {
 
   ShortURLBuilder treatAsSafe() {
     this.safe = true;
+    return this;
+  }
+
+  ShortURLBuilder qrResource(String res) {
+    this.qr = res;
     return this;
   }
 

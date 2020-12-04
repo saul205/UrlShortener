@@ -14,6 +14,7 @@ CREATE TABLE SHORTURL
     OWNER   VARCHAR(255),            -- User id
     MODE    INTEGER,                 -- Redirect mode
     SAFE    BOOLEAN,                 -- Safe target
+    QR      VARCHAR(255),            -- QR resource
     ALCANZABLE INTEGER,               -- Alcanzable
     IP      VARCHAR(20),             -- IP
     COUNTRY VARCHAR(50),             -- Country
