@@ -88,8 +88,9 @@ public class SystemTests {
     postLink("http://example.com/");
 
     ResponseEntity<String> entity = restTemplate.getForEntity("/f684a3c4", String.class);
-    assertThat(entity.getStatusCode(), is(HttpStatus.OK));
-    assertThat(entity.getBody(), is("No se sabe si la url es alcanzable o no, intente en un rato"));
+    ReadContext rc = JsonPath.parse(entity.getBody());
+    assertThat(entity.getStatusCode(), is(HttpStatus.CONFLICT));
+    assertThat(rc.read("$.Error"), is("No se sabe si la url es alcanzable o no, intente en un rato"));
   }
 
   @Test
@@ -99,8 +100,21 @@ public class SystemTests {
     Thread.sleep(500);
 
     ResponseEntity<String> entity = restTemplate.getForEntity("/295d6175", String.class);
-    assertThat(entity.getStatusCode(), is(HttpStatus.OK));
-    assertThat(entity.getBody(), is("La url no es alcanzable"));
+    assertThat(entity.getStatusCode(), is(HttpStatus.BAD_REQUEST));
+    ReadContext rc = JsonPath.parse(entity.getBody());
+    assertThat(rc.read("$.Error"), is("La url no es alcanzable"));
+  }
+
+  @Test
+  public void testRedirectionNotSafe() throws Exception {
+    postLink("https://testsafebrowsing.appspot.com/s/malware.html");
+
+    Thread.sleep(500);
+
+    ResponseEntity<String> entity = restTemplate.getForEntity("/b61e4f44", String.class);
+    assertThat(entity.getStatusCode(), is(HttpStatus.BAD_REQUEST));
+    ReadContext rc = JsonPath.parse(entity.getBody());
+    assertThat(rc.read("$.Error"), is("No seguro"));
   }
 
   @Test
@@ -141,7 +155,7 @@ public class SystemTests {
     assertThat(entity.getHeaders().getContentType(), is(new MediaType("application", "json")));
     ReadContext rc = JsonPath.parse(entity.getBody());
     assertThat(rc.read("$.clicks"), is(4));
-    assertThat(rc.read("$.urls"), is(3));
+    assertThat(rc.read("$.urls"), is(4));
     HashMap top = new HashMap();
     top.put("http://example.com/", 1);
     HashMap top2 = new HashMap();

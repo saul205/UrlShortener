@@ -39,6 +39,17 @@ import org.json.simple.JSONArray;
 
 @RestController
 public class UrlShortenerController {
+
+  public enum Alcanzable{
+    alcanzable(1), no_alcanzable(-1), desconocido(0);
+
+    public final Integer value;
+
+    private Alcanzable(Integer v){
+      this.value = v;
+    }
+  }
+
   private final ShortURLService shortUrlService;
 
   private final ClickService clickService;
@@ -58,17 +69,29 @@ public class UrlShortenerController {
   public ResponseEntity<?> redirectTo(@PathVariable String id,
                                       HttpServletRequest request) {
     ShortURL l = shortUrlService.findByKey(id);
-    if (l != null && l.getAlcanzable() == 1) {
-      clickService.saveClick(id, extractIP(request));
-      return createSuccessfulRedirectToResponse(l);
-    } else if(l != null && l.getAlcanzable() == 0){
-      return new ResponseEntity<String>("No se sabe si la url es alcanzable o no, intente en un rato", HttpStatus.OK);
-    }else if(l != null && l.getAlcanzable() == -1){
-      return new ResponseEntity<String>("La url no es alcanzable", HttpStatus.OK);
-    }
-    else{
+
+    if(l == null){
       return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
+    
+    if(l.getAlcanzable() == Alcanzable.desconocido.value){
+      JSONObject o = new JSONObject();
+      o.put("Error", "No se sabe si la url es alcanzable o no, intente en un rato");
+      return new ResponseEntity<JSONObject>(o, HttpStatus.CONFLICT);
+    }else if(l.getAlcanzable() == Alcanzable.no_alcanzable.value){
+      JSONObject o = new JSONObject();
+      o.put("Error", "La url no es alcanzable");
+      return new ResponseEntity<JSONObject>(o, HttpStatus.BAD_REQUEST);
+    }
+
+    if(!l.getSafe()){
+      JSONObject o = new JSONObject();
+      o.put("Error", "No seguro");
+      return new ResponseEntity<JSONObject>(o, HttpStatus.BAD_REQUEST);
+    }
+
+    clickService.saveClick(id, extractIP(request));
+    return createSuccessfulRedirectToResponse(l);
   }
 
   @RequestMapping(value = "/link", method = RequestMethod.POST)
