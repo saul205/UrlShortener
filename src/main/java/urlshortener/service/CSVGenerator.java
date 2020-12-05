@@ -33,11 +33,11 @@ public class CSVGenerator {
                 String line = "";
                 int i = 0;
                 while ((line = br.readLine()) != null && i < 500) {
-                    if(!checkCSV(line)) {
-                        lines = null;
-                        break;
+                    if(checkCSV(line)) {
+                        lines.add(line);
+                    } else {
+                        lines.add(line + ",,Debe ser una URI http o https válida");
                     }
-                    lines.add(line);
                     ++i;
                 }
                 br.close();
@@ -54,10 +54,14 @@ public class CSVGenerator {
         try (FileWriter fw = new FileWriter(f)) {
             ArrayList<ShortURL> sh = new ArrayList<ShortURL>();
 	        for(String l : lines) {
-                ShortURL su = sus.save(l, "", ip);
-                String aux = su.getUri().toString();
-                fw.write(l + "," + aux.substring(0, aux.lastIndexOf("/")) + "/sh.html?id=" + su.getHash() + "\n");
-                sh.add(su);
+                if(l.contains(",,")) {
+                    fw.write(l + "\n");
+                } else {
+                    ShortURL su = sus.save(l, "", ip);
+                    String aux = su.getUri().toString();
+                    fw.write(l + "," + aux.substring(0, aux.lastIndexOf("/")) + "/sh.html?id=" + su.getHash() + ",\n");
+                    sh.add(su);
+                }
             }
             pair.add(sh);
         } catch(Exception e) {

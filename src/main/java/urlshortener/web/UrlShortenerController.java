@@ -153,12 +153,15 @@ public class UrlShortenerController {
     ArrayList<String> lines = CSVGenerator.readCSV(file);
     if(lines == null) 
       return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-
+      
 		ArrayList<Object> csv = CSVGenerator.writeCSV(lines, request.getRemoteAddr(), shortUrlService);
+    ArrayList<ShortURL> su = (ArrayList<ShortURL>)csv.get(0);
+    int size = su.size();
+    if(size == 0) 
+      return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 
     executor.submit(() -> {
-      ArrayList<ShortURL> su = (ArrayList<ShortURL>)csv.get(0);
-      CountDownLatch latch = new CountDownLatch(su.size());
+      CountDownLatch latch = new CountDownLatch(size);
       ArrayList<ShortURL> check = new ArrayList<ShortURL>();
       for(ShortURL s : su) {
         executor.submit(() -> {
@@ -178,16 +181,9 @@ public class UrlShortenerController {
       if(check.size() > 0) shortUrlService.checkSafe(check);
     });
 
-    /*new Thread(() -> {
-      for(ShortURL su : (ArrayList<ShortURL>)csv.get(0)) {
-        reachableService.isReachable(su.getHash());
-      }
-    }).start();
-    new Thread(() -> {
-      shortUrlService.checkSafe((ArrayList<ShortURL>)csv.get(0));
-    }).start();*/
     File ret = (File)csv.get(1);
-    return ResponseEntity.created(URI.create("/csv"))
+    URI location = su.get(0).getUri();
+    return ResponseEntity.created(location)
                 .header("Content-Disposition", "attachment; filename=ShortURL.csv")
                 .contentLength(ret.length())
                 .contentType(MediaType.parseMediaType("text/csv"))

@@ -1,12 +1,14 @@
 dropArea = document.getElementById("files") || null;
 if (dropArea !== null) dropArea.addEventListener('drop', changeType, false);
 var file = null;
+var ws;
 
 $(document).ready( function(){
   $("#choosefile").click( function(event){
       var form = new FormData();
-      form.append('file', file);
-      event.preventDefault();
+      connect()
+      form.append('file', file)
+      event.preventDefault()
       $.ajax({
           type: "POST",
           url: "/csv",
@@ -59,4 +61,25 @@ function change() {
   document.getElementById("choosefile").style.zIndex = "10000";
   document.getElementById("choosefile").style.position = "relative";
   document.getElementById("choosefile").style.cursor = "pointer";
+}
+
+function connect() {
+	ws = new WebSocket('ws://localhost:8080/csvws')
+	ws.onmessage = function(data) {
+		console.log(data.data)
+	}
+}
+
+function disconnect() {
+	if (ws != null) {
+		ws.close()
+	}
+	console.log("Websocket is in disconnected state")
+}
+
+function sendData() {
+	var data = JSON.stringify({
+		'user' : $("#user").val()
+	})
+	ws.send(data)
 }
