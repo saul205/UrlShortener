@@ -85,17 +85,11 @@ public class UrlShortenerController {
       h.setLocation(su.getUri());
 
       executor.submit(() -> {
-        reachableService.isReachable(su.getHash());
-        ShortURL aux = shortUrlService.findByKey(su.getHash());
-        if(aux.getAlcanzable() == 1) 
+        Boolean reach = reachableService.isReachable(su.getHash());
+        //ShortURL aux = shortUrlService.findByKey(su.getHash());
+        if(reach) 
           shortUrlService.checkSafe(new ShortURL[] {su});
       });
-      /*new Thread(() -> {
-        reachableService.isReachable(su.getHash());
-      }).start();
-      new Thread(() -> {
-        shortUrlService.checkSafe(new ShortURL[] {su});
-      }).start();*/
 
       return new ResponseEntity<>(su, h, HttpStatus.CREATED);
     } else {
@@ -165,9 +159,9 @@ public class UrlShortenerController {
       ArrayList<ShortURL> check = new ArrayList<ShortURL>();
       for(ShortURL s : su) {
         executor.submit(() -> {
-          reachableService.isReachable(s.getHash());
-          ShortURL aux = shortUrlService.findByKey(s.getHash());
-          if(aux.getAlcanzable() == 1) check.add(aux);
+          Boolean reach = reachableService.isReachable(s.getHash());
+          //ShortURL aux = shortUrlService.findByKey(s.getHash());
+          if(reach) check.add(s);
           latch.countDown();
         });
       }

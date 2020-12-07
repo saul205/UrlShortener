@@ -23,6 +23,14 @@ public class CSVGenerator {
         return false;
     }
 
+    public static String readLine(String line) {
+        if(checkCSV(line)) {
+            return line;
+        } else {
+            return line + ",,Debe ser una URI http o https válida";
+        }
+    }
+
     public static ArrayList<String> readCSV(MultipartFile file) {
         ArrayList<String> lines = new ArrayList<String>();
         if (!file.isEmpty()) {
@@ -33,11 +41,7 @@ public class CSVGenerator {
                 String line = "";
                 int i = 0;
                 while ((line = br.readLine()) != null && i < 500) {
-                    if(checkCSV(line)) {
-                        lines.add(line);
-                    } else {
-                        lines.add(line + ",,Debe ser una URI http o https válida");
-                    }
+                    lines.add(readLine(line));
                     ++i;
                 }
                 br.close();
