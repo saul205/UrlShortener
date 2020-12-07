@@ -20,10 +20,12 @@ import urlshortener.domain.ShortURL;
 import urlshortener.repository.ClickRepository;
 import urlshortener.repository.impl.Tuple;
 import urlshortener.service.ClickService;
+import urlshortener.service.HistoryService;
 import urlshortener.service.ShortURLService;
 import urlshortener.service.ReachableService;
 import urlshortener.service.QRGenerator;
 import urlshortener.service.CSVGenerator;
+import urlshortener.domain.HistoryElement;
 
 import java.util.ArrayList;
 import java.awt.image.BufferedImage;
@@ -40,8 +42,15 @@ import org.json.simple.JSONArray;
 @RestController
 public class UrlShortenerController {
 
-  public static final String JOBS_TO_DO = "JOBS_TO_DO";
-  public static final String FINISHED_JOBS = "FINISHED_JOBS";
+  public enum Estado{
+    correcto(1), me_da_q_no(-1), unknown(0);
+
+    public final Integer value;
+
+    private Alcanzable(Integer v){
+      this.value = v;
+    }
+  }
 
   private final ShortURLService shortUrlService;
 
@@ -49,13 +58,16 @@ public class UrlShortenerController {
 
   private final ReachableService reachableSVC;
 
+  private final HistoryService historyService;
+
   private final ThreadPoolExecutor executor;
 
-  public UrlShortenerController(ShortURLService shortUrlService, ClickService clickService, ReachableService reachableSVC) {
+  public UrlShortenerController(ShortURLService shortUrlService, ClickService clickService, HistoryService historyService, ReachableService reachableSVC) {
     this.shortUrlService = shortUrlService;
     this.clickService = clickService;
+    this.historyService = historyService;
     this.executor = (ThreadPoolExecutor) Executors.newCachedThreadPool();
-    this.reachableSVC = reachableSVC;//new ReachableService(null);
+    this.reachableSVC = reachableSVC; //new ReachableService(null);
     executor.submit(() -> {
       reachableSVC.receiver(shortUrlService, shortUrlService.getSURLSVC());
     });
@@ -75,21 +87,40 @@ public class UrlShortenerController {
   public ResponseEntity<?> redirectTo(@PathVariable String id,
                                       HttpServletRequest request) {
     ShortURL l = shortUrlService.findByKey(id);
-    if (l != null && l.getAlcanzable() == 1 && l.getSafe() == 1) {
+
+    if(l == null) return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+
+    if (l.getAlcanzable() == 1 && l.getSafe() == 1) {
       clickService.saveClick(id, extractIP(request));
       return createSuccessfulRedirectToResponse(l);
-    } else if(l != null && l.getAlcanzable() == 0){
+    } else if(l.getAlcanzable() == 0) {
       return new ResponseEntity<String>("No se sabe si la url es alcanzable o no, intente en un rato", HttpStatus.OK);
-    } else if(l != null && l.getAlcanzable() == -1){
+    } else if(l.getAlcanzable() == -1) {
       return new ResponseEntity<String>("La url no es alcanzable", HttpStatus.OK);
-    } else if(l != null && l.getSafe() == -1){
+    } else if(l.getSafe() == -1) {
       return new ResponseEntity<String>("La url no es segura", HttpStatus.OK);
-    } else if(l != null && l.getSafe() == 0){
+    } else if(l.getSafe() == 0) {
       return new ResponseEntity<String>("No se sabe si la url es segura o no, intente en un rato", HttpStatus.OK);
     }
-    else{
-      return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+
+    if(l.getAlcanzable() == Alcanzable.desconocido.value){
+      JSONObject o = new JSONObject();
+      o.put("Error", "No se sabe si la url es alcanzable o no, intente en un rato");
+      return new ResponseEntity<JSONObject>(o, HttpStatus.CONFLICT);
+    }else if(l.getAlcanzable() == Alcanzable.no_alcanzable.value){
+      JSONObject o = new JSONObject();
+      o.put("Error", "La url no es alcanzable");
+      return new ResponseEntity<JSONObject>(o, HttpStatus.BAD_REQUEST);
     }
+
+    if(!l.getSafe()){
+      JSONObject o = new JSONObject();
+      o.put("Error", "No seguro");
+      return new ResponseEntity<JSONObject>(o, HttpStatus.BAD_REQUEST);
+    }
+
+    clickService.saveClick(id, extractIP(request));
+    return createSuccessfulRedirectToResponse(l);
   }
 
   @RequestMapping(value = "/link", method = RequestMethod.POST)
@@ -109,6 +140,10 @@ public class UrlShortenerController {
       h.setLocation(su.getUri());
 
       reachableSVC.sender(su);
+
+      executor.submit(() -> {
+        HistoryElement s = historyService.save(su.getHash(), su.getTarget(), su.getCreated(), su.getIP());
+      });
 
       return new ResponseEntity<>(su, h, HttpStatus.CREATED);
     } else {

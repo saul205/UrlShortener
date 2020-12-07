@@ -26,6 +26,8 @@ dependencies {
     implementation 'com.google.zxing:core:3.3.0'
     implementation 'com.google.zxing:javase:3.3.0'
 
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
     runtime 'org.springdoc:springdoc-openapi-ui:1.2.32'
 
     runtime 'org.webjars:bootstrap:3.3.5'

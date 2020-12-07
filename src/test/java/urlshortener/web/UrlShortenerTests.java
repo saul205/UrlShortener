@@ -59,13 +59,13 @@ public class UrlShortenerTests {
   }
 
   @Test
-  public void thatRedirectToReturnsTemporaryRedirectIfKeyExistsAndNotYetAvailable()
+  public void thatRedirectToReturnsConflictIfKeyExistsAndNotYetAvailable()
       throws Exception {
     when(shortUrlService.findByKey("someKey")).thenReturn(someUrlNotYetAvailable());
 
     mockMvc.perform(get("/{id}", "someKey")).andDo(print())
-        .andExpect(status().isOk())
-        .andExpect(content().string("No se sabe si la url es alcanzable o no, intente en un rato"));
+        .andExpect(status().isConflict())
+        .andExpect(jsonPath("$.Error", is("No se sabe si la url es alcanzable o no, intente en un rato")));
   }
 
   @Test
@@ -74,8 +74,8 @@ public class UrlShortenerTests {
     when(shortUrlService.findByKey("someKey")).thenReturn(someUrlNotAvailable());
 
     mockMvc.perform(get("/{id}", "someKey")).andDo(print())
-        .andExpect(status().isOk())
-        .andExpect(content().string("La url no es alcanzable"));
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.Error", is("La url no es alcanzable")));
   }
 
   @Test
