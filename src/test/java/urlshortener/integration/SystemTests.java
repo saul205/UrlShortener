@@ -76,7 +76,7 @@ public class SystemTests {
   public void testRedirection() throws Exception {
     postLink("http://example.com/");
 
-    Thread.sleep(500);
+    Thread.sleep(1000);
 
     ResponseEntity<String> entity = restTemplate.getForEntity("/f684a3c4", String.class);
     assertThat(entity.getStatusCode(), is(HttpStatus.TEMPORARY_REDIRECT));
@@ -96,7 +96,7 @@ public class SystemTests {
   public void testRedirectionNotAvailable() throws Exception {
     postLink("http://noexiste.es/");
 
-    Thread.sleep(500);
+    Thread.sleep(1000);
 
     ResponseEntity<String> entity = restTemplate.getForEntity("/295d6175", String.class);
     assertThat(entity.getStatusCode(), is(HttpStatus.OK));
@@ -122,7 +122,7 @@ public class SystemTests {
     postLink("http://example.com/");
     postLink("http://google.com/");
 
-    Thread.sleep(500);
+    Thread.sleep(1000);
 
     ResponseEntity<String> entity1 = restTemplate.getForEntity("/f684a3c4", String.class);
     assertThat(entity1.getStatusCode(), is(HttpStatus.TEMPORARY_REDIRECT));
@@ -155,7 +155,7 @@ public class SystemTests {
 
     postLink("http://google.com/");
 
-    Thread.sleep(500);
+    Thread.sleep(1000);
 
     ResponseEntity<String> entity1 = restTemplate.getForEntity("/5e399431", String.class);
     assertThat(entity1.getStatusCode(), is(HttpStatus.TEMPORARY_REDIRECT));

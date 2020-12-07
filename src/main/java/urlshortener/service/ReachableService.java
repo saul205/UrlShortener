@@ -81,20 +81,18 @@ public class ReachableService {
 
     DeliverCallback deliverCallback = (consumerTag, delivery) -> {
       String message = new String(delivery.getBody(), "UTF-8");
-      logger.info("---> [WORKER|r]: " + message);
+      //logger.info("---> [WORKER|r]: " + message);
       String[] splitted = message.split(",");
       if (splitted.length == 2){
 
         Integer aux = Work(splitted[1]);
         message = splitted[0] + "," + aux.toString();
-        logger.info("---> [WORKER|s]: " + message);
+        //logger.info("---> [WORKER|s]: " + message);
         channel.basicPublish("", FINISHED_JOBS, null, message.getBytes(StandardCharsets.UTF_8));
       }
     };
 
     channel.basicConsume(JOBS_TO_DO, false, deliverCallback, consumerTag -> { });
-
-    connection.close();
   }
 
   private ConnectionFactory fact;
@@ -115,8 +113,8 @@ public class ReachableService {
       conn = fact.newConnection();
       ch = conn.createChannel();
 
-      ch.queueDeclare(JOBS_TO_DO, false, false, true, null);
       ch.queueDeclare(FINISHED_JOBS, false, false, true, null);
+      ch.queueDeclare(JOBS_TO_DO, false, false, true, null);
           
     } catch (Exception e) {
       logger.info(e.toString());
@@ -130,7 +128,7 @@ public class ReachableService {
       new Thread(() -> {
         try {
           String message = new String(delivery.getBody(), "UTF-8");
-          logger.info("---> [RECEIVER|r]: " + message);
+          //logger.info("---> [RECEIVER|r]: " + message);
           String[] splitted = message.split(",");
           if (splitted.length == 2){
             ShortURL surl = surlrep.findByKey(splitted[0]);
@@ -158,8 +156,7 @@ public class ReachableService {
   public void sender(ShortURL surl) {
     if (surl == null) return;
     String msg = surl.getHash() + "," + surl.getTarget();
-
-    logger.info("---> [SENDER|s]: " + msg);
+    //logger.info("---> [SENDER|s]: " + msg);
 
     try {
       ch.basicPublish("", JOBS_TO_DO, null, msg.getBytes(StandardCharsets.UTF_8));
