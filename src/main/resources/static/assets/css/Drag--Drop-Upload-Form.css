@@ -137,6 +137,14 @@
   fill: #8e3838 !important;
 }
 
+#gsb .unknown .cls-2 {
+  fill: #9b9b9b !important;
+}
+
+#gsb .unknown .cls-3 {
+  fill: #484848 !important;
+}
+
 #qr {
   width: 240px;
   height: auto;

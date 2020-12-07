@@ -56,16 +56,16 @@ public class ShortURLRepositoryTests {
   public void thatSaveSafe() {
     assertNotNull(repository.save(urlSafe()));
     assertSame(
-        jdbc.queryForObject("select safe from SHORTURL", Boolean.class),
-        true);
-    repository.mark(urlSafe(), false);
+        jdbc.queryForObject("select safe from SHORTURL", Integer.class),
+        1);
+    repository.mark(urlSafe(), -1);
     assertSame(
-        jdbc.queryForObject("select safe from SHORTURL", Boolean.class),
-        false);
-    repository.mark(urlSafe(), true);
+        jdbc.queryForObject("select safe from SHORTURL", Integer.class),
+        -1);
+    repository.mark(urlSafe(), 1);
     assertSame(
-        jdbc.queryForObject("select safe from SHORTURL", Boolean.class),
-        true);
+        jdbc.queryForObject("select safe from SHORTURL", Integer.class),
+        1);
   }
 
   @Test

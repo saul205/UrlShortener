@@ -50,7 +50,7 @@ public class ShortURLService {
         .createdNow()
         .randomOwner()
         .temporaryRedirect()
-        .treatAsSafe()
+        .treatAsUnknown()
         .qrResource(qrres, (String hash) -> linkTo(methodOn(UrlShortenerController.class)
                                             .generateQR(hash)).toUri())
         .ip(ip)
@@ -124,7 +124,7 @@ public class ShortURLService {
         for(int j = 0; j < l.size(); ++j) {
           ShortURL aux = l.get(j);
           if(aux.getTarget().equals(js)) {
-            shortURLRepository.mark(aux, false);
+            shortURLRepository.mark(aux, -1);
             l.remove(j);
             break;
           }
@@ -133,12 +133,12 @@ public class ShortURLService {
     }
 
     // No hace falta ponerlas como true ya que es su valor por defecto
-    /*if(l.size() > 0) {
+    if(l.size() > 0) {
       for(int i = 0; i < l.size(); ++i) {
         ShortURL aux = l.get(i);
-        shortURLRepository.mark(aux, true);
+        shortURLRepository.mark(aux, 1);
       }
-    }*/
+    }
   }
 
   public List<ShortURL> getLastNByIp(String Ip, Integer n){

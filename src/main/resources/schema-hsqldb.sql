@@ -13,7 +13,7 @@ CREATE TABLE SHORTURL
     CREATED TIMESTAMP,               -- Creation date
     OWNER   VARCHAR(255),            -- User id
     MODE    INTEGER,                 -- Redirect mode
-    SAFE    BOOLEAN,                 -- Safe target
+    SAFE    INTEGER,                 -- Safe target
     QR      VARCHAR(255),            -- QR resource
     ALCANZABLE INTEGER,               -- Alcanzable
     IP      VARCHAR(20),             -- IP

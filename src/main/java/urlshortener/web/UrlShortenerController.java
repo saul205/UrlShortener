@@ -75,13 +75,17 @@ public class UrlShortenerController {
   public ResponseEntity<?> redirectTo(@PathVariable String id,
                                       HttpServletRequest request) {
     ShortURL l = shortUrlService.findByKey(id);
-    if (l != null && l.getAlcanzable() == 1) {
+    if (l != null && l.getAlcanzable() == 1 && l.getSafe() == 1) {
       clickService.saveClick(id, extractIP(request));
       return createSuccessfulRedirectToResponse(l);
     } else if(l != null && l.getAlcanzable() == 0){
       return new ResponseEntity<String>("No se sabe si la url es alcanzable o no, intente en un rato", HttpStatus.OK);
-    }else if(l != null && l.getAlcanzable() == -1){
+    } else if(l != null && l.getAlcanzable() == -1){
       return new ResponseEntity<String>("La url no es alcanzable", HttpStatus.OK);
+    } else if(l != null && l.getSafe() == -1){
+      return new ResponseEntity<String>("La url no es segura", HttpStatus.OK);
+    } else if(l != null && l.getSafe() == 0){
+      return new ResponseEntity<String>("No se sabe si la url es segura o no, intente en un rato", HttpStatus.OK);
     }
     else{
       return new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -124,7 +128,7 @@ public class UrlShortenerController {
     if (su.getAlcanzable() != 1){
       return new ResponseEntity<>(HttpStatus.CONFLICT);
     }
-    if (!su.getSafe()){
+    if (su.getSafe() != 1){
       return new ResponseEntity<>(HttpStatus.CONFLICT);
     }
     if (su.getQR() == null) {
@@ -168,35 +172,26 @@ public class UrlShortenerController {
   public ResponseEntity<?> handleFileUpload(@RequestParam("file") MultipartFile file,
                                   HttpServletRequest request) {
     ArrayList<String> lines = CSVGenerator.readCSV(file);
-    if(lines == null) 
+    if(lines == null)
       return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 
 		ArrayList<Object> csv = CSVGenerator.writeCSV(lines, request.getRemoteAddr(), shortUrlService);
+    ArrayList<ShortURL> su = (ArrayList<ShortURL>)csv.get(0);
+    int size = su.size();
+    if(size == 0)
+      return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 
     executor.submit(() -> {
-      ArrayList<ShortURL> su = (ArrayList<ShortURL>)csv.get(0);
-      CountDownLatch latch = new CountDownLatch(su.size());
-      ArrayList<ShortURL> check = new ArrayList<ShortURL>();
+
       for(ShortURL s : su) {
-        executor.submit(() -> {
-          reachableSVC.sender(s);
-          ShortURL aux = shortUrlService.findByKey(s.getHash());
-          if(aux.getAlcanzable() == 1) check.add(aux);
-          latch.countDown();
-        });
+        reachableSVC.sender(s);
       }
 
-      try {
-        latch.await();
-      } catch(InterruptedException e) {
-        Thread.currentThread().interrupt();
-      }
-      
-      if(check.size() > 0) shortUrlService.checkSafe(check);
     });
 
     File ret = (File)csv.get(1);
-    return ResponseEntity.created(URI.create("/csv"))
+    URI location = su.get(0).getUri();
+    return ResponseEntity.created(location)
                 .header("Content-Disposition", "attachment; filename=ShortURL.csv")
                 .contentLength(ret.length())
                 .contentType(MediaType.parseMediaType("text/csv"))
