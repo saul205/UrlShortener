@@ -25,6 +25,7 @@ import urlshortener.service.ShortURLService;
 import urlshortener.service.ReachableService;
 import urlshortener.service.QRGenerator;
 import urlshortener.service.CSVGenerator;
+import urlshortener.domain.HistoryElement;
 
 import java.util.ArrayList;
 import java.awt.image.BufferedImage;
@@ -119,14 +120,8 @@ public class UrlShortenerController {
       });
 
       executor.submit(() -> {
-        historyService.countByIp(su.getIP());
+        HistoryElement s = historyService.save(su.getHash(), su.getTarget(), su.getCreated(), su.getIP());
       });
-      /*new Thread(() -> {
-        reachableService.isReachable(su.getHash());
-      }).start();
-      new Thread(() -> {
-        shortUrlService.checkSafe(new ShortURL[] {su});
-      }).start();*/
 
       return new ResponseEntity<>(su, h, HttpStatus.CREATED);
     } else {

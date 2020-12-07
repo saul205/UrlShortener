@@ -1,8 +1,8 @@
 -- Clean database
 
 DROP TABLE CLICK IF EXISTS;
-DROP TABLE SHORTURL IF EXISTS;
 DROP TABLE HISTORIAL IF EXISTS;
+DROP TABLE SHORTURL IF EXISTS;
 
 -- ShortURL
 
@@ -39,15 +39,9 @@ CREATE TABLE CLICK
 
 CREATE TABLE HISTORIAL
 (
-    HASH    VARCHAR(30) PRIMARY KEY, -- Key
-    TARGET  VARCHAR(1024),           -- Original URL
-    SPONSOR VARCHAR(1024),           -- Sponsor URL
-    CREATED TIMESTAMP,               -- Creation date
-    OWNER   VARCHAR(255),            -- User id
-    MODE    INTEGER,                 -- Redirect mode
-    SAFE    BOOLEAN,                 -- Safe target
-    ALCANZABLE INTEGER,               -- Alcanzable
-    IP      VARCHAR(20),             -- IP
-    COUNTRY VARCHAR(50),             -- Country
-    URI     VARCHAR(1024)
+    ID      BIGINT IDENTITY,            
+    HASH    VARCHAR(10) NOT NULL FOREIGN KEY REFERENCES SHORTURL (HASH),
+    TARGET  VARCHAR(1024),
+    CREATED TIMESTAMP,
+    IP      VARCHAR(20)
 );
