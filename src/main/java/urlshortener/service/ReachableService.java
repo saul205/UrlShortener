@@ -125,7 +125,7 @@ public class ReachableService {
     
   }
 
-  public void receiver(ShortURLService surlsvc, ShortURLRepository surlrep) {
+  public void receiver(ShortURLService surlsvc) {
     DeliverCallback deliverCB = (consumerTag, delivery) -> {
 
       new Thread(() -> {
@@ -134,10 +134,10 @@ public class ReachableService {
           //logger.info("---> [RECEIVER|r]: " + message);
           String[] splitted = message.split(",");
           if (splitted.length == 2){
-            ShortURL surl = surlrep.findByKey(splitted[0]);
+            ShortURL surl = surlsvc.findByKey(splitted[0]);
             if (surl != null) {
               surl.setAlcanzable(Integer.valueOf(splitted[1]));
-              surlrep.update(surl);
+              surlsvc.update(surl);
 
               if (surl.getAlcanzable() == 1) surlsvc.checkSafe(new ShortURL[] {surl});
             }
@@ -158,7 +158,7 @@ public class ReachableService {
 
   public void sender(ShortURL surl) {
     if (surl == null) return;
-    if (surl.getHash() == null || surl.getTarget()== null) return;
+    logger.info("---> [SURL|s]: ");
     String msg = surl.getHash() + "," + surl.getTarget();
     logger.info("---> [SENDER|s]: " + msg);
 

@@ -72,7 +72,7 @@ public class UrlShortenerController {
     this.executor = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     this.reachableSVC = reachableSVC; //new ReachableService(null);
     executor.submit(() -> {
-      reachableSVC.receiver(shortUrlService, shortUrlService.getSURLSVC());
+      reachableSVC.receiver(shortUrlService);
     });
     executor.submit(() -> {
       try {

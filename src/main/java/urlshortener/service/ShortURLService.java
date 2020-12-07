@@ -144,4 +144,8 @@ public class ShortURLService {
   public List<ShortURL> getLastNByIp(String Ip, Integer n){
     return shortURLRepository.lastNByIp(Ip, n);
   }
+
+  public void update(ShortURL su){
+    shortURLRepository.update(su);
+  }
 }
