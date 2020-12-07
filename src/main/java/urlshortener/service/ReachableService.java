@@ -5,6 +5,8 @@ import java.net.SocketTimeoutException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+import org.springframework.stereotype.Service;
+
 //Implementacion de RbbMQ con spring es secuencial
 //import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import com.rabbitmq.client.Channel;
@@ -20,6 +22,7 @@ import urlshortener.service.ShortURLService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@Service
 public class ReachableService {
 
   private static final Logger logger = LoggerFactory.getLogger(ReachableService.class);
@@ -155,8 +158,9 @@ public class ReachableService {
 
   public void sender(ShortURL surl) {
     if (surl == null) return;
+    if (surl.getHash() == null || surl.getTarget()== null) return;
     String msg = surl.getHash() + "," + surl.getTarget();
-    //logger.info("---> [SENDER|s]: " + msg);
+    logger.info("---> [SENDER|s]: " + msg);
 
     try {
       ch.basicPublish("", JOBS_TO_DO, null, msg.getBytes(StandardCharsets.UTF_8));

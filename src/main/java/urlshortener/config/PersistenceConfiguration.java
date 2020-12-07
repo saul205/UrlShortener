@@ -39,10 +39,10 @@ public class PersistenceConfiguration {
     return new HistoryRepositoryImpl(jdbc);
   }
 
-  @Bean
-  ReachableService reachablesvc() {
+  /*@Bean
+  ReachableService reachableSVC() {
     return new ReachableService(null);
-  }
+  }*/
 
   @Bean
 	public HttpMessageConverter<BufferedImage> createImageHttpMessageConverter() {

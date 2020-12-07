@@ -68,7 +68,7 @@ public class ShortURLRepositoryImpl implements ShortURLRepository{
       }
       return su;
     } catch (Exception e) {
-      log.debug("When insert", e);
+      log.info("When insert", e);
       return null;
     }
 

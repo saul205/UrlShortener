@@ -38,6 +38,8 @@ import java.io.File;
 
 import org.json.simple.JSONObject;
 import org.json.simple.JSONArray;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @RestController
 public class UrlShortenerController {
@@ -61,6 +63,7 @@ public class UrlShortenerController {
   private final HistoryService historyService;
 
   private final ThreadPoolExecutor executor;
+  private static final Logger logger = LoggerFactory.getLogger(UrlShortenerController.class);
 
   public UrlShortenerController(ShortURLService shortUrlService, ClickService clickService, HistoryService historyService, ReachableService reachableSVC) {
     this.shortUrlService = shortUrlService;
@@ -89,19 +92,6 @@ public class UrlShortenerController {
     ShortURL l = shortUrlService.findByKey(id);
 
     if(l == null) return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-
-    if (l.getAlcanzable() == State.correct.value && l.getSafe() == State.correct.value) {
-      clickService.saveClick(id, extractIP(request));
-      return createSuccessfulRedirectToResponse(l);
-    } else if(l.getAlcanzable() == State.unknown.value) {
-      return new ResponseEntity<String>("No se sabe si la url es alcanzable o no, intente en un rato", HttpStatus.OK);
-    } else if(l.getAlcanzable() == State.incorrect.value) {
-      return new ResponseEntity<String>("La url no es alcanzable", HttpStatus.OK);
-    } else if(l.getSafe() == State.incorrect.value) {
-      return new ResponseEntity<String>("La url no es segura", HttpStatus.OK);
-    } else if(l.getSafe() == State.unknown.value) {
-      return new ResponseEntity<String>("No se sabe si la url es segura o no, intente en un rato", HttpStatus.OK);
-    }
 
     if(l.getAlcanzable() == State.unknown.value) {
       JSONObject o = new JSONObject();
@@ -143,6 +133,8 @@ public class UrlShortenerController {
       HttpHeaders h = new HttpHeaders();
       h.setLocation(su.getUri());
 
+      logger.info("AYUDAAA");
+      logger.info(new Boolean(su == null).toString());
       reachableSVC.sender(su);
 
       executor.submit(() -> {
