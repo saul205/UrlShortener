@@ -20,7 +20,7 @@ public class ShortURLBuilder {
   private Timestamp created;
   private String owner;
   private Integer mode;
-  private Boolean safe;
+  private Integer safe;
   private String ip;
   private String country;
 
@@ -70,8 +70,8 @@ public class ShortURLBuilder {
     return this;
   }
 
-  ShortURLBuilder treatAsSafe() {
-    this.safe = true;
+  ShortURLBuilder treatAsUnknown() {
+    this.safe = 0;
     return this;
   }
 

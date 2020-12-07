@@ -93,6 +93,17 @@ public class SystemTests {
   }
 
   @Test
+  public void testRedirectionNotSafe() throws Exception {
+    postLink("https://testsafebrowsing.appspot.com/s/malware.html");
+
+    Thread.sleep(500);
+
+    ResponseEntity<String> entity = restTemplate.getForEntity("/b61e4f44", String.class);
+    assertThat(entity.getStatusCode(), is(HttpStatus.OK));
+    assertThat(entity.getBody(), is("La url no es segura"));
+  }
+
+  @Test
   public void testRedirectionNotAvailable() throws Exception {
     postLink("http://noexiste.es/");
 

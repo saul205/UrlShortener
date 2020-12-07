@@ -23,8 +23,13 @@ import urlshortener.web.UrlShortenerController;
 
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 @Service
 public class ShortURLService {
+
+  private static final Logger logger = LoggerFactory.getLogger(ShortURLService.class);
 
   private final ShortURLRepository shortURLRepository;
   private String apiKey = "AIzaSyCTp0lW0RBgGuPoPlmgESk9tblrWy9ny08";
@@ -46,7 +51,7 @@ public class ShortURLService {
         .createdNow()
         .randomOwner()
         .temporaryRedirect()
-        .treatAsSafe()
+        .treatAsUnknown()
         .ip(ip)
         .unknownCountry()
         .build();
@@ -111,6 +116,10 @@ public class ShortURLService {
 
     JSONObject resp = new JSONObject(response);
 
+    for(ShortURL a : l) {
+      logger.info("_____________________ PRIMERO SHORTURL " + a.getTarget());
+    }
+
     if(resp.has("matches")) {
       JSONArray iter = resp.getJSONArray("matches");
       for(int i = 0; i < iter.length(); ++i) {
@@ -118,7 +127,7 @@ public class ShortURLService {
         for(int j = 0; j < l.size(); ++j) {
           ShortURL aux = l.get(j);
           if(aux.getTarget().equals(js)) {
-            shortURLRepository.mark(aux, false);
+            shortURLRepository.mark(aux, -1);
             l.remove(j);
             break;
           }
@@ -126,13 +135,17 @@ public class ShortURLService {
       }
     }
 
+    for(ShortURL a : l) {
+      logger.info("_____________________ SHORTURL " + a.getTarget());
+    }
+
     // No hace falta ponerlas como true ya que es su valor por defecto
-    /*if(l.size() > 0) {
+    if(l.size() > 0) {
       for(int i = 0; i < l.size(); ++i) {
         ShortURL aux = l.get(i);
-        shortURLRepository.mark(aux, true);
+        shortURLRepository.mark(aux, 1);
       }
-    }*/
+    }
   }
 
   public List<ShortURL> getLastNByIp(String Ip, Integer n){

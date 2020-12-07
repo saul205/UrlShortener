@@ -143,7 +143,7 @@ public class UrlShortenerTests {
             null,
             null,
             0,
-            false,
+            -1,
             null,
             null));
   }

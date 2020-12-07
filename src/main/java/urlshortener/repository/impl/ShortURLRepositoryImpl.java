@@ -26,7 +26,7 @@ public class ShortURLRepositoryImpl implements ShortURLRepository{
       (rs, rowNum) -> new ShortURL(rs.getString("hash"), rs.getString("target"),
           rs.getString("uri"), rs.getString("sponsor"), rs.getTimestamp("created"),
           rs.getString("owner"), rs.getInt("mode"),
-          rs.getBoolean("safe"), rs.getString("ip"),
+          rs.getInt("safe"), rs.getString("ip"),
           rs.getString("country"), rs.getInt("alcanzable"));
 
   private final JdbcTemplate jdbc;
@@ -78,7 +78,7 @@ public class ShortURLRepositoryImpl implements ShortURLRepository{
   }
 
   @Override
-  public ShortURL mark(ShortURL su, boolean safeness) {
+  public ShortURL mark(ShortURL su, Integer safeness) {
     try {
       jdbc.update("UPDATE shorturl SET safe=? WHERE hash=?", safeness,
           su.getHash());

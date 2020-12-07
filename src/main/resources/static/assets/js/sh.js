@@ -22,7 +22,8 @@ function resSTID(msg, st){
     console.log(st);
     if (st === "success"){
         console.log(msg)
-        if(!msg.segura) $("#JAKE").addClass("bad");
+        if(msg.segura == -1) $("#JAKE").addClass("bad");
+        else if(msg.segura == 0) $("#JAKE").addClass("unknown");
         if(msg.alcanzable === 0){
             $("#rble-i").css( "color", "#444444" );
             $("#rble-s").html("URL availability unknown");
