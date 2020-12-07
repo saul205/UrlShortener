@@ -7,6 +7,7 @@ import urlshortener.repository.ClickRepository;
 import urlshortener.repository.ShortURLRepository;
 import urlshortener.repository.impl.ClickRepositoryImpl;
 import urlshortener.repository.impl.ShortURLRepositoryImpl;
+import urlshortener.service.ReachableService;
 
 import org.springframework.http.converter.BufferedImageHttpMessageConverter;
 import org.springframework.http.converter.HttpMessageConverter;
@@ -29,6 +30,11 @@ public class PersistenceConfiguration {
   @Bean
   ClickRepository clickRepository() {
     return new ClickRepositoryImpl(jdbc);
+  }
+
+  @Bean
+  ReachableService reachablesvc() {
+    return new ReachableService(null);
   }
 
   @Bean

@@ -51,11 +51,11 @@ public class UrlShortenerController {
 
   private final ThreadPoolExecutor executor;
 
-  public UrlShortenerController(ShortURLService shortUrlService, ClickService clickService) {
+  public UrlShortenerController(ShortURLService shortUrlService, ClickService clickService, ReachableService reachableSVC) {
     this.shortUrlService = shortUrlService;
     this.clickService = clickService;
     this.executor = (ThreadPoolExecutor) Executors.newCachedThreadPool();
-    this.reachableSVC = new ReachableService(null);
+    this.reachableSVC = reachableSVC;//new ReachableService(null);
     executor.submit(() -> {
       reachableSVC.receiver(shortUrlService, shortUrlService.getSURLSVC());
     });

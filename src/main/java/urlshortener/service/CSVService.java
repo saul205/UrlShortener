@@ -39,24 +39,12 @@ public class CSVService {
       sol += res + "\n";
     }
 
-    final int flen = len - lenSu;
     executor.submit(() -> {
-      CountDownLatch latch = new CountDownLatch(flen);
-      ArrayList<ShortURL> check = new ArrayList<ShortURL>();
+
       for(ShortURL s : su) {
-        executor.submit(() -> {
-          if(rs.isReachable(s.getHash())) check.add(s);
-          latch.countDown();
-        });
+        rs.sender(s);
       }
 
-      try {
-        latch.await();
-      } catch(InterruptedException e) {
-        Thread.currentThread().interrupt();
-      }
-
-      if(check.size() > 0) sus.checkSafe(check);
     });
 
     return sol;
