@@ -32,7 +32,7 @@ public class CSVService {
       String res = CSVGenerator.readLine(lines[i]);
       if(!res.contains(",,")) {
         su.add(sus.save(res, "", lines[len]));
-        res += ",http://localhost:8080/sh.html?id=" + su.get(i).getHash();
+        res += ",http://localhost:8080/" + su.get(i).getHash();
       } else {
         ++lenSu;
       }

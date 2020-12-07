@@ -63,7 +63,7 @@ public class CSVGenerator {
                 } else {
                     ShortURL su = sus.save(l, "", ip);
                     String aux = su.getUri().toString();
-                    fw.write(l + "," + aux.substring(0, aux.lastIndexOf("/")) + "/sh.html?id=" + su.getHash() + ",\n");
+                    fw.write(l + "," + aux.substring(0, aux.lastIndexOf("/")) + "/" + su.getHash() + ",\n");
                     sh.add(su);
                 }
             }
