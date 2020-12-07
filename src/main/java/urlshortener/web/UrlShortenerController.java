@@ -42,12 +42,12 @@ import org.json.simple.JSONArray;
 @RestController
 public class UrlShortenerController {
 
-  public enum Estado{
-    correcto(1), me_da_q_no(-1), unknown(0);
+  public enum State {
+    correct(1), incorrect(-1), unknown(0);
 
     public final Integer value;
 
-    private Alcanzable(Integer v){
+    private State(Integer v){
       this.value = v;
     }
   }
@@ -90,32 +90,36 @@ public class UrlShortenerController {
 
     if(l == null) return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 
-    if (l.getAlcanzable() == 1 && l.getSafe() == 1) {
+    if (l.getAlcanzable() == State.correct.value && l.getSafe() == State.correct.value) {
       clickService.saveClick(id, extractIP(request));
       return createSuccessfulRedirectToResponse(l);
-    } else if(l.getAlcanzable() == 0) {
+    } else if(l.getAlcanzable() == State.unknown.value) {
       return new ResponseEntity<String>("No se sabe si la url es alcanzable o no, intente en un rato", HttpStatus.OK);
-    } else if(l.getAlcanzable() == -1) {
+    } else if(l.getAlcanzable() == State.incorrect.value) {
       return new ResponseEntity<String>("La url no es alcanzable", HttpStatus.OK);
-    } else if(l.getSafe() == -1) {
+    } else if(l.getSafe() == State.incorrect.value) {
       return new ResponseEntity<String>("La url no es segura", HttpStatus.OK);
-    } else if(l.getSafe() == 0) {
+    } else if(l.getSafe() == State.unknown.value) {
       return new ResponseEntity<String>("No se sabe si la url es segura o no, intente en un rato", HttpStatus.OK);
     }
 
-    if(l.getAlcanzable() == Alcanzable.desconocido.value){
+    if(l.getAlcanzable() == State.unknown.value) {
       JSONObject o = new JSONObject();
       o.put("Error", "No se sabe si la url es alcanzable o no, intente en un rato");
       return new ResponseEntity<JSONObject>(o, HttpStatus.CONFLICT);
-    }else if(l.getAlcanzable() == Alcanzable.no_alcanzable.value){
+    } else if(l.getAlcanzable() == State.incorrect.value) {
       JSONObject o = new JSONObject();
       o.put("Error", "La url no es alcanzable");
       return new ResponseEntity<JSONObject>(o, HttpStatus.BAD_REQUEST);
     }
 
-    if(!l.getSafe()){
+    if(l.getSafe() == State.incorrect.value) {
       JSONObject o = new JSONObject();
       o.put("Error", "No seguro");
+      return new ResponseEntity<JSONObject>(o, HttpStatus.BAD_REQUEST);
+    } else if(l.getSafe() == State.unknown.value) {
+      JSONObject o = new JSONObject();
+      o.put("Error", "No se sabe si es seguro o no");
       return new ResponseEntity<JSONObject>(o, HttpStatus.BAD_REQUEST);
     }
 
@@ -160,10 +164,10 @@ public class UrlShortenerController {
     if (su == null) {
       return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
-    if (su.getAlcanzable() != 1){
+    if (su.getAlcanzable() != State.correct.value){
       return new ResponseEntity<>(HttpStatus.CONFLICT);
     }
-    if (su.getSafe() != 1){
+    if (su.getSafe() != State.correct.value){
       return new ResponseEntity<>(HttpStatus.CONFLICT);
     }
     if (su.getQR() == null) {

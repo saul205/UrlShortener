@@ -20,6 +20,7 @@ import java.util.Arrays;
 import urlshortener.domain.ShortURL;
 import urlshortener.repository.ShortURLRepository;
 import urlshortener.web.UrlShortenerController;
+import urlshortener.web.UrlShortenerController.State;
 
 import java.util.List;
 
@@ -124,7 +125,7 @@ public class ShortURLService {
         for(int j = 0; j < l.size(); ++j) {
           ShortURL aux = l.get(j);
           if(aux.getTarget().equals(js)) {
-            shortURLRepository.mark(aux, -1);
+            shortURLRepository.mark(aux, State.incorrect.value);
             l.remove(j);
             break;
           }
@@ -132,11 +133,10 @@ public class ShortURLService {
       }
     }
 
-    // No hace falta ponerlas como true ya que es su valor por defecto
     if(l.size() > 0) {
       for(int i = 0; i < l.size(); ++i) {
         ShortURL aux = l.get(i);
-        shortURLRepository.mark(aux, 1);
+        shortURLRepository.mark(aux, State.correct.value);
       }
     }
   }
