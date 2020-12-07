@@ -23,13 +23,8 @@ import urlshortener.web.UrlShortenerController;
 
 import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 @Service
 public class ShortURLService {
-
-  private static final Logger logger = LoggerFactory.getLogger(ShortURLService.class);
 
   private final ShortURLRepository shortURLRepository;
   private String apiKey = "AIzaSyCTp0lW0RBgGuPoPlmgESk9tblrWy9ny08";
@@ -116,10 +111,6 @@ public class ShortURLService {
 
     JSONObject resp = new JSONObject(response);
 
-    for(ShortURL a : l) {
-      logger.info("_____________________ PRIMERO SHORTURL " + a.getTarget());
-    }
-
     if(resp.has("matches")) {
       JSONArray iter = resp.getJSONArray("matches");
       for(int i = 0; i < iter.length(); ++i) {
@@ -133,10 +124,6 @@ public class ShortURLService {
           }
         }
       }
-    }
-
-    for(ShortURL a : l) {
-      logger.info("_____________________ SHORTURL " + a.getTarget());
     }
 
     // No hace falta ponerlas como true ya que es su valor por defecto
