@@ -21,7 +21,6 @@ import urlshortener.repository.ClickRepository;
 import urlshortener.repository.impl.Tuple;
 import urlshortener.service.ClickService;
 import urlshortener.service.ShortURLService;
-import urlshortener.service.ReachableService;
 import urlshortener.service.QRGenerator;
 import urlshortener.service.CSVGenerator;
 
@@ -41,7 +40,7 @@ public class DbController {
 
   private final ClickService clickService;
 
-  public DbController(ShortURLService shortUrlService, ClickService clickService, ReachableService reachableService) {
+  public DbController(ShortURLService shortUrlService, ClickService clickService) {
 		this.shortUrlService = shortUrlService;
 		this.clickService = clickService;
 	}

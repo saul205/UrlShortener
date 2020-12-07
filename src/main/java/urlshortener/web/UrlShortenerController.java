@@ -39,19 +39,36 @@ import org.json.simple.JSONArray;
 
 @RestController
 public class UrlShortenerController {
+
+  public static final String JOBS_TO_DO = "JOBS_TO_DO";
+  public static final String FINISHED_JOBS = "FINISHED_JOBS";
+
   private final ShortURLService shortUrlService;
 
   private final ClickService clickService;
 
-  private final ReachableService reachableService;
+  private final ReachableService reachableSVC;
 
   private final ThreadPoolExecutor executor;
 
-  public UrlShortenerController(ShortURLService shortUrlService, ClickService clickService, ReachableService reachableService) {
+  public UrlShortenerController(ShortURLService shortUrlService, ClickService clickService) {
     this.shortUrlService = shortUrlService;
     this.clickService = clickService;
-    this.reachableService = reachableService;
     this.executor = (ThreadPoolExecutor) Executors.newCachedThreadPool();
+    this.reachableSVC = new ReachableService(null);
+    executor.submit(() -> {
+      reachableSVC.receiver(shortUrlService, shortUrlService.getSURLSVC());
+    });
+    executor.submit(() -> {
+      try {
+        ReachableService.main(null);
+      } catch (Exception e) {}
+    });
+    executor.submit(() -> {
+      try {
+        ReachableService.main(null);
+      } catch (Exception e) {}
+    });
   }
 
   @RequestMapping(value = "/{id:(?!link|index|sh).*}", method = RequestMethod.GET)
@@ -87,18 +104,7 @@ public class UrlShortenerController {
       HttpHeaders h = new HttpHeaders();
       h.setLocation(su.getUri());
 
-      executor.submit(() -> {
-        reachableService.isReachable(su.getHash());
-        ShortURL aux = shortUrlService.findByKey(su.getHash());
-        if(aux.getAlcanzable() == 1) 
-          shortUrlService.checkSafe(new ShortURL[] {su});
-      });
-      /*new Thread(() -> {
-        reachableService.isReachable(su.getHash());
-      }).start();
-      new Thread(() -> {
-        shortUrlService.checkSafe(new ShortURL[] {su});
-      }).start();*/
+      reachableSVC.sender(su);
 
       return new ResponseEntity<>(su, h, HttpStatus.CREATED);
     } else {
@@ -173,7 +179,7 @@ public class UrlShortenerController {
       ArrayList<ShortURL> check = new ArrayList<ShortURL>();
       for(ShortURL s : su) {
         executor.submit(() -> {
-          reachableService.isReachable(s.getHash());
+          reachableSVC.sender(s);
           ShortURL aux = shortUrlService.findByKey(s.getHash());
           if(aux.getAlcanzable() == 1) check.add(aux);
           latch.countDown();
@@ -189,14 +195,6 @@ public class UrlShortenerController {
       if(check.size() > 0) shortUrlService.checkSafe(check);
     });
 
-    /*new Thread(() -> {
-      for(ShortURL su : (ArrayList<ShortURL>)csv.get(0)) {
-        reachableService.isReachable(su.getHash());
-      }
-    }).start();
-    new Thread(() -> {
-      shortUrlService.checkSafe((ArrayList<ShortURL>)csv.get(0));
-    }).start();*/
     File ret = (File)csv.get(1);
     return ResponseEntity.created(URI.create("/csv"))
                 .header("Content-Disposition", "attachment; filename=ShortURL.csv")

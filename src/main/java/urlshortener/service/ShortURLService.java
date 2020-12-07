@@ -33,6 +33,10 @@ public class ShortURLService {
     this.shortURLRepository = shortURLRepository;
   }
 
+  public ShortURLRepository getSURLSVC(){
+    return shortURLRepository;
+  }
+
   public ShortURL findByKey(String id) {
     return shortURLRepository.findByKey(id);
   }
