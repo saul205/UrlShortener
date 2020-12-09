@@ -23,6 +23,14 @@ public class CSVGenerator {
         return false;
     }
 
+    public static String readLine(String line) {
+        if(checkCSV(line)) {
+            return line;
+        } else {
+            return line + ",,Debe ser una URI http o https válida";
+        }
+    }
+
     public static ArrayList<String> readCSV(MultipartFile file) {
         ArrayList<String> lines = new ArrayList<String>();
         if (!file.isEmpty()) {
@@ -33,11 +41,7 @@ public class CSVGenerator {
                 String line = "";
                 int i = 0;
                 while ((line = br.readLine()) != null && i < 500) {
-                    if(!checkCSV(line)) {
-                        lines = null;
-                        break;
-                    }
-                    lines.add(line);
+                    lines.add(readLine(line));
                     ++i;
                 }
                 br.close();
@@ -54,10 +58,14 @@ public class CSVGenerator {
         try (FileWriter fw = new FileWriter(f)) {
             ArrayList<ShortURL> sh = new ArrayList<ShortURL>();
 	        for(String l : lines) {
-                ShortURL su = sus.save(l, "", ip);
-                String aux = su.getUri().toString();
-                fw.write(l + "," + aux.substring(0, aux.lastIndexOf("/")) + "/sh.html?id=" + su.getHash() + "\n");
-                sh.add(su);
+                if(l.contains(",,")) {
+                    fw.write(l + "\n");
+                } else {
+                    ShortURL su = sus.save(l, "", ip, false);
+                    String aux = su.getUri().toString();
+                    fw.write(l + "," + aux.substring(0, aux.lastIndexOf("/")) + "/" + su.getHash() + ",\n");
+                    sh.add(su);
+                }
             }
             pair.add(sh);
         } catch(Exception e) {

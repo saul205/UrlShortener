@@ -1,6 +1,7 @@
 -- Clean database
 
 DROP TABLE CLICK IF EXISTS;
+DROP TABLE HISTORIAL IF EXISTS;
 DROP TABLE SHORTURL IF EXISTS;
 
 -- ShortURL
@@ -13,13 +14,13 @@ CREATE TABLE SHORTURL
     CREATED TIMESTAMP,               -- Creation date
     OWNER   VARCHAR(255),            -- User id
     MODE    INTEGER,                 -- Redirect mode
-    SAFE    BOOLEAN,                 -- Safe target
+    SAFE    INTEGER,                 -- Safe target
+    QR      VARCHAR(255),            -- QR resource
     ALCANZABLE INTEGER,               -- Alcanzable
     IP      VARCHAR(20),             -- IP
     COUNTRY VARCHAR(50),             -- Country
     URI     VARCHAR(1024)
 );
-
 -- Click
 
 CREATE TABLE CLICK
@@ -32,4 +33,15 @@ CREATE TABLE CLICK
     PLATFORM VARCHAR(50),                                                 -- Platform
     IP       VARCHAR(20),                                                 -- IP
     COUNTRY  VARCHAR(50)                                                  -- Country
-)
+);
+
+-- History
+
+CREATE TABLE HISTORIAL
+(
+    ID      BIGINT IDENTITY,
+    HASH    VARCHAR(10) NOT NULL FOREIGN KEY REFERENCES SHORTURL (HASH),
+    TARGET  VARCHAR(1024),
+    CREATED TIMESTAMP,
+    IP      VARCHAR(20)
+);

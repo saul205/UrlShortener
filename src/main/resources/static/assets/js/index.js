@@ -4,7 +4,7 @@ $(document).ready( function(){
         $.ajax({
             type: "POST",
             url: "/link",
-            data: $("#SendUrl").serialize(),
+            data: $("#SendUrl").serialize().concat("&qr=true"),
             success: function (msg,err) { resLink(msg, err); },
             error: function (msg,err) { resLink(msg, err); }
         });

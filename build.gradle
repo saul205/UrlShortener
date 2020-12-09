@@ -18,11 +18,15 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-jdbc'
     implementation 'org.springframework.boot:spring-boot-starter-hateoas'
     implementation 'org.springframework.boot:spring-boot-starter-web'
+    //implementation 'org.springframework.boot:spring-boot-starter-amqp'
+    implementation 'com.rabbitmq:amqp-client:5.10.0'
 
     implementation 'commons-validator:commons-validator:1.6'
     implementation 'com.google.guava:guava:28.1-jre'
     implementation 'com.google.zxing:core:3.3.0'
     implementation 'com.google.zxing:javase:3.3.0'
+
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
 
     runtime 'org.springdoc:springdoc-openapi-ui:1.2.32'
 
@@ -31,11 +35,15 @@ dependencies {
 
     runtime 'org.hsqldb:hsqldb'
 
+    //compile 'com.rabbitmq:amqp-client:5.10.0'
+
     compile group: 'com.googlecode.json-simple', name: 'json-simple', version: '1.1'
+    compile group: 'org.springframework', name: 'spring-websocket', version: '5.3.1'
     compile group: 'org.json', name: 'json', version: '20200518'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.apache.httpcomponents:httpclient'
+    //testImplementation 'org.springframework.amqp:spring-rabbit-test'
 }
 
 clean.doFirst {

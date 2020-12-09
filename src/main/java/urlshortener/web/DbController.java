@@ -1,5 +1,8 @@
 package urlshortener.web;
 
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
+
 import java.net.URI;
 import javax.servlet.http.HttpServletRequest;
 import org.apache.commons.validator.routines.UrlValidator;
@@ -17,10 +20,11 @@ import org.springframework.core.io.FileSystemResource;
 
 import urlshortener.domain.Click;
 import urlshortener.domain.ShortURL;
-import urlshortener.repository.ClickRepository;
+import urlshortener.domain.HistoryElement;
 import urlshortener.repository.impl.Tuple;
 import urlshortener.service.ClickService;
 import urlshortener.service.ShortURLService;
+import urlshortener.service.HistoryService;
 import urlshortener.service.ReachableService;
 import urlshortener.service.QRGenerator;
 import urlshortener.service.CSVGenerator;
@@ -34,80 +38,31 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONArray;
 
 @RestController
-@RequestMapping("/db")
+@RequestMapping("/history")
 public class DbController {
 
-	private final ShortURLService shortUrlService;
+  private final HistoryService historyService;
 
-  private final ClickService clickService;
-
-  public DbController(ShortURLService shortUrlService, ClickService clickService, ReachableService reachableService) {
-		this.shortUrlService = shortUrlService;
-		this.clickService = clickService;
+  public DbController(HistoryService historyService) {
+		this.historyService = historyService;
 	}
-	  
-  @RequestMapping(value = "", method = RequestMethod.GET)
-  public ResponseEntity<JSONObject> getData(){
-		List<Tuple> urls = clickService.getTopN(10);
 
-		JSONObject obj = new JSONObject();
-		JSONObject mainObj = new JSONObject();
-
-		int i = 0;
-		for(Tuple u : urls){
-			JSONObject j = new JSONObject();
-			j.put(u.getKey(), u.getValue());
-			obj.put(i, j);
-			i++;
-		}
-
-		mainObj.put("clicks", clickService.count());
-		mainObj.put("urls", shortUrlService.count());
-		mainObj.put("top", obj);
-		
-		return new ResponseEntity<>(mainObj, HttpStatus.OK);
-  }
-
-  @RequestMapping(value = "/search", method = RequestMethod.POST)
- 	public ResponseEntity<JSONObject> getTargetCount(@RequestParam("url") String target){
-
-		if(target == "") return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-
-		List<ShortURL> urls = shortUrlService.findByTarget(target);
-		JSONObject json = new JSONObject();
-
-		if(urls.size() == 0){
-			json.put("target", target);	
-			json.put("count", 0);	
-			return new ResponseEntity<>(json, HttpStatus.OK);
-		}
-
-		String clkText = "";
-		for(ShortURL u : urls){
-			Long count = clickService.clicksByHash(u.getHash());
-			json.put("target", target);
-			json.put("hash", u.getHash());
-			json.put("count", count);
-
-			//TODO Quitar
-			json.put("alcanzable", u.getAlcanzable());
-		}
-		return new ResponseEntity<>(json, HttpStatus.OK);
-	}
-	  
-	@RequestMapping(value = "/history", method = RequestMethod.GET)
+	@RequestMapping(value = "", method = RequestMethod.GET)
 	public ResponseEntity<JSONObject> getHistory(HttpServletRequest request){
-		String ip = request.getRemoteAddr();
-		List<ShortURL> top = shortUrlService.getLastNByIp(ip, 10);
-
 		JSONObject json = new JSONObject();
+		String ip = request.getRemoteAddr();
+
+		List<HistoryElement> top = historyService.findByIp(ip, 10);
+
 		int i = 0;
-		for(ShortURL u : top){
-			JSONObject j = new JSONObject();
-			j.put(u.getTarget(), u.getCreated().toString());
+		for(HistoryElement he : top){
+			JSONArray j = new JSONArray();
+			j.add(linkTo(methodOn(UrlShortenerController.class).redirectTo(he.getHash(), null)).toUri().toString());
+			j.add(he.getCreated().toString());
+			j.add(he.getTarget());
 			json.put(i, j);
 			i++;
 		}
-		return new ResponseEntity<>(json, HttpStatus.OK);
+		return new ResponseEntity<JSONObject>(json, HttpStatus.OK);
 	}
 }

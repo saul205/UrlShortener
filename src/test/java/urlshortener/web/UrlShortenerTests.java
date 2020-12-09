@@ -27,6 +27,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import urlshortener.domain.ShortURL;
 import urlshortener.service.ClickService;
+import urlshortener.service.ReachableService;
 import urlshortener.service.ShortURLService;
 
 public class UrlShortenerTests {
@@ -38,6 +39,9 @@ public class UrlShortenerTests {
 
   @Mock
   private ShortURLService shortUrlService;
+
+  @Mock
+  private ReachableService reachableSVC;
 
   @InjectMocks
   private UrlShortenerController urlShortener;
@@ -59,13 +63,13 @@ public class UrlShortenerTests {
   }
 
   @Test
-  public void thatRedirectToReturnsTemporaryRedirectIfKeyExistsAndNotYetAvailable()
+  public void thatRedirectToReturnsConflictIfKeyExistsAndNotYetAvailable()
       throws Exception {
     when(shortUrlService.findByKey("someKey")).thenReturn(someUrlNotYetAvailable());
 
     mockMvc.perform(get("/{id}", "someKey")).andDo(print())
-        .andExpect(status().isOk())
-        .andExpect(content().string("No se sabe si la url es alcanzable o no, intente en un rato"));
+        .andExpect(status().isConflict())
+        .andExpect(jsonPath("$.Error", is("No se sabe si la url es alcanzable o no, intente en un rato")));
   }
 
   @Test
@@ -74,8 +78,8 @@ public class UrlShortenerTests {
     when(shortUrlService.findByKey("someKey")).thenReturn(someUrlNotAvailable());
 
     mockMvc.perform(get("/{id}", "someKey")).andDo(print())
-        .andExpect(status().isOk())
-        .andExpect(content().string("La url no es alcanzable"));
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.Error", is("La url no es alcanzable")));
   }
 
   @Test
@@ -126,7 +130,7 @@ public class UrlShortenerTests {
 
   @Test
   public void thatShortenerFailsIfTheRepositoryReturnsNull() throws Exception {
-    when(shortUrlService.save(any(String.class), any(String.class), any(String.class)))
+    when(shortUrlService.save(any(String.class), any(String.class), any(String.class), any(Boolean.class)))
         .thenReturn(null);
 
     mockMvc.perform(post("/link").param("url", "someKey")).andDo(print())
@@ -134,7 +138,7 @@ public class UrlShortenerTests {
   }
 
   private void configureSave(String sponsor) {
-    when(shortUrlService.save(any(), any(), any()))
+    when(shortUrlService.save(any(), any(), any(), any()))
         .then((Answer<ShortURL>) invocation -> new ShortURL(
             "f684a3c4",
             "http://example.com/",
@@ -143,7 +147,8 @@ public class UrlShortenerTests {
             null,
             null,
             0,
-            false,
+            -1,
+            null,
             null,
             null));
   }

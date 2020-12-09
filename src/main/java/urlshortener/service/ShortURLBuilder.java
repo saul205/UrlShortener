@@ -20,7 +20,8 @@ public class ShortURLBuilder {
   private Timestamp created;
   private String owner;
   private Integer mode;
-  private Boolean safe;
+  private Integer safe;
+  private String qr;
   private String ip;
   private String country;
 
@@ -38,6 +39,7 @@ public class ShortURLBuilder {
         owner,
         mode,
         safe,
+        qr,
         ip,
         country
     );
@@ -70,8 +72,14 @@ public class ShortURLBuilder {
     return this;
   }
 
-  ShortURLBuilder treatAsSafe() {
-    this.safe = true;
+  ShortURLBuilder treatAsUnknown() {
+    this.safe = 0;
+    return this;
+  }
+
+  ShortURLBuilder qrResource(Boolean res, Function<String, URI> extractor) {
+    if (res) this.qr = extractor.apply(hash).toString();
+    else this.qr = null;
     return this;
   }
 

@@ -20,6 +20,7 @@ import java.util.Arrays;
 import urlshortener.domain.ShortURL;
 import urlshortener.repository.ShortURLRepository;
 import urlshortener.web.UrlShortenerController;
+import urlshortener.web.UrlShortenerController.State;
 
 import java.util.List;
 
@@ -33,11 +34,15 @@ public class ShortURLService {
     this.shortURLRepository = shortURLRepository;
   }
 
+  public ShortURLRepository getSURLSVC(){
+    return shortURLRepository;
+  }
+
   public ShortURL findByKey(String id) {
     return shortURLRepository.findByKey(id);
   }
 
-  public ShortURL save(String url, String sponsor, String ip) {
+  public ShortURL save(String url, String sponsor, String ip, Boolean qrres) {
     ShortURL su = ShortURLBuilder.newInstance()
         .target(url)
         .uri((String hash) -> linkTo(methodOn(UrlShortenerController.class).redirectTo(hash, null))
@@ -46,7 +51,9 @@ public class ShortURLService {
         .createdNow()
         .randomOwner()
         .temporaryRedirect()
-        .treatAsSafe()
+        .treatAsUnknown()
+        .qrResource(qrres, (String hash) -> linkTo(methodOn(UrlShortenerController.class)
+                                            .generateQR(hash)).toUri())
         .ip(ip)
         .unknownCountry()
         .build();
@@ -118,7 +125,7 @@ public class ShortURLService {
         for(int j = 0; j < l.size(); ++j) {
           ShortURL aux = l.get(j);
           if(aux.getTarget().equals(js)) {
-            shortURLRepository.mark(aux, false);
+            shortURLRepository.mark(aux, State.incorrect.value);
             l.remove(j);
             break;
           }
@@ -126,16 +133,19 @@ public class ShortURLService {
       }
     }
 
-    // No hace falta ponerlas como true ya que es su valor por defecto
-    /*if(l.size() > 0) {
+    if(l.size() > 0) {
       for(int i = 0; i < l.size(); ++i) {
         ShortURL aux = l.get(i);
-        shortURLRepository.mark(aux, true);
+        shortURLRepository.mark(aux, State.correct.value);
       }
-    }*/
+    }
   }
 
   public List<ShortURL> getLastNByIp(String Ip, Integer n){
     return shortURLRepository.lastNByIp(Ip, n);
+  }
+
+  public void update(ShortURL su){
+    shortURLRepository.update(su);
   }
 }

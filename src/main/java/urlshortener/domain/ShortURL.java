@@ -12,14 +12,15 @@ public class ShortURL {
   private Timestamp created;
   private String owner;
   private Integer mode;
-  private Boolean safe;
+  private Integer safe;
+  private String qr;
   private String ip;
   private String country;
   private Integer alcanzable;
 
   public ShortURL(String hash, String target, URI uri, String sponsor,
-                  Timestamp created, String owner, Integer mode, Boolean safe, String ip,
-                  String country) {
+                  Timestamp created, String owner, Integer mode, Integer safe,
+                  String qr, String ip, String country) {
     this.hash = hash;
     this.target = target;
     this.uri = uri;
@@ -28,14 +29,15 @@ public class ShortURL {
     this.owner = owner;
     this.mode = mode;
     this.safe = safe;
+    this.qr = qr;
     this.ip = ip;
     this.country = country;
     this.alcanzable = 0;
   }
 
   public ShortURL(String hash, String target, String uri, String sponsor,
-                  Timestamp created, String owner, Integer mode, Boolean safe, String ip,
-                  String country, Integer alcanzable){
+                  Timestamp created, String owner, Integer mode, Integer safe,
+                  String qr, String ip, String country, Integer alcanzable){
     this.hash = hash;
     this.target = target;
     try{
@@ -48,14 +50,15 @@ public class ShortURL {
     this.owner = owner;
     this.mode = mode;
     this.safe = safe;
+    this.qr = qr;
     this.ip = ip;
     this.country = country;
     this.alcanzable = alcanzable;
   }
 
   public ShortURL(String hash, String target, URI uri, String sponsor,
-                  Timestamp created, String owner, Integer mode, Boolean safe, String ip,
-                  String country, Integer alcanzable) {
+                  Timestamp created, String owner, Integer mode, Integer safe,
+                  String qr, String ip, String country, Integer alcanzable) {
     this.hash = hash;
     this.target = target;
     this.uri = uri;
@@ -64,6 +67,7 @@ public class ShortURL {
     this.owner = owner;
     this.mode = mode;
     this.safe = safe;
+    this.qr = qr;
     this.ip = ip;
     this.country = country;
     this.alcanzable = alcanzable;
@@ -104,8 +108,12 @@ public class ShortURL {
     return sponsor;
   }
 
-  public Boolean getSafe() {
+  public Integer getSafe() {
     return safe;
+  }
+
+  public String getQR() {
+    return qr;
   }
 
   public String getIP() {
