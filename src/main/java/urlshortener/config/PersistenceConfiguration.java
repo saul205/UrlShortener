@@ -10,10 +10,15 @@ import urlshortener.repository.impl.ClickRepositoryImpl;
 import urlshortener.repository.impl.ShortURLRepositoryImpl;
 import urlshortener.repository.impl.HistoryRepositoryImpl;
 import urlshortener.service.ReachableService;
+import urlshortener.repository.CountsRepository;
+import urlshortener.repository.impl.CountsRepositoryImpl;
+import urlshortener.repository.MostVisitedRepository;
+import urlshortener.repository.impl.MostVisitedRepositoryImpl;
 
 import org.springframework.http.converter.BufferedImageHttpMessageConverter;
 import org.springframework.http.converter.HttpMessageConverter;
 import java.awt.image.BufferedImage;
+import java.beans.BeanProperty;
 
 @Configuration
 public class PersistenceConfiguration {
@@ -37,6 +42,16 @@ public class PersistenceConfiguration {
   @Bean
   HistoryRepository historyRepository() {
     return new HistoryRepositoryImpl(jdbc);
+  }
+
+  @Bean
+  CountsRepository countsRepository(){
+    return new CountsRepositoryImpl(jdbc);
+  }
+
+  @Bean
+  MostVisitedRepository mostVisitedRepository(){
+    return new MostVisitedRepositoryImpl(jdbc);
   }
 
   /*@Bean
