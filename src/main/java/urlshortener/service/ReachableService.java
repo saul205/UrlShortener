@@ -27,8 +27,8 @@ public class ReachableService {
 
   private static final Logger logger = LoggerFactory.getLogger(ReachableService.class);
 
-  public static final String JOBS_TO_DO = "JOBS_TO_DO";
-  public static final String FINISHED_JOBS = "FINISHED_JOBS";
+  public static final String JOBS_TO_DO = "REACHABLE_TO_DO";
+  public static final String FINISHED_JOBS = "REACHABLE_FINISH";
 
   // Worker's method (Worker's Work)
   private static Integer Work(String str_url){
