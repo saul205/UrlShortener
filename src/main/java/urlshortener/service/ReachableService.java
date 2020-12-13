@@ -6,7 +6,8 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 
 import org.springframework.stereotype.Service;
-
+import org.apache.camel.ProducerTemplate;
+import org.springframework.beans.factory.annotation.Autowired;
 //Implementacion de RbbMQ con spring es secuencial
 //import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import com.rabbitmq.client.Channel;
@@ -29,6 +30,9 @@ public class ReachableService {
 
   public static final String JOBS_TO_DO = "REACHABLE_TO_DO";
   public static final String FINISHED_JOBS = "REACHABLE_FINISH";
+
+  @Autowired
+  private ProducerTemplate producerTemplate;
 
   // Worker's method (Worker's Work)
   private static Integer Work(String str_url){
@@ -139,7 +143,7 @@ public class ReachableService {
               surl.setAlcanzable(Integer.valueOf(splitted[1]));
               surlsvc.update(surl);
 
-              if (surl.getAlcanzable() == 1) surlsvc.checkSafe(new ShortURL[] {surl});
+              if (surl.getAlcanzable() == 1) producerTemplate.sendBody("direct:checkSafe", surl);
             }
           }
         } catch (Exception e) {

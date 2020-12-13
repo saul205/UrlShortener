@@ -82,9 +82,8 @@ function connect() {
     if(data.data == "Connected") {
       sendData()
     } else {
-      ws.send("END")
-      disconnect()
       download(file.name.substring(0, file.name.length - 4) + "-short.csv", data.data)
+      disconnect()
     }
   }
 }
