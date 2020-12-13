@@ -117,7 +117,7 @@ public class SystemTests {
   public void testRedirectionNotSafe() throws Exception {
     postLink("https://testsafebrowsing.appspot.com/s/malware.html");
 
-    Thread.sleep(2000);
+    Thread.sleep(6000);
 
     ResponseEntity<String> entity = restTemplate.getForEntity("/b61e4f44", String.class);
     assertThat(entity.getStatusCode(), is(HttpStatus.BAD_REQUEST));
