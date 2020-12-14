@@ -1,5 +1,7 @@
 package urlshortener.config;
 
+import org.apache.camel.CamelContext;
+import org.apache.camel.ProducerTemplate;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -29,8 +31,11 @@ public class PersistenceConfiguration {
 
   private final JdbcTemplate jdbc;
 
-  public PersistenceConfiguration(JdbcTemplate jdbc) {
+  private final CamelContext camelContext;
+
+  public PersistenceConfiguration(JdbcTemplate jdbc, CamelContext camelContext) {
     this.jdbc = jdbc;
+    this.camelContext = camelContext;
   }
 
   @Bean
@@ -57,6 +62,12 @@ public class PersistenceConfiguration {
   MostVisitedRepository mostVisitedRepository(){
     return new MostVisitedRepositoryImpl(jdbc);
   }
+
+  @Bean
+  public ProducerTemplate producerTemplate() throws Exception {
+    return camelContext.createProducerTemplate();
+  }
+
   /*@Bean
   ReachableService reachableSVC() {
     return new ReachableService(null);
