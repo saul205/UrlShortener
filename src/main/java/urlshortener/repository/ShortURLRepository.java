@@ -21,5 +21,5 @@ public interface ShortURLRepository {
 
   List<ShortURL> list(Long limit, Long offset);
 
-  List<ShortURL> lastNByIp(String ip, Integer n);
+  List<ShortURL> lastN(Integer n);
 }

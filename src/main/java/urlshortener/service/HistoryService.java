@@ -36,29 +36,36 @@ public class HistoryService {
     this.historyRepository = historyRepository;
   }
 
-  public List<HistoryElement> findByHashIp(String hash, String ip, Integer n) {
-    return historyRepository.findByHashIp(hash, ip, n);
+  public List<HistoryElement> findByHash(String hash, Integer n) {
+    return historyRepository.findByHash(hash, n); 
   }
 
-  public List<HistoryElement> findByIp(String ip, Integer n) {
-    return historyRepository.findByIp(ip, n);
+  public List<HistoryElement> find(Integer n) {
+    return historyRepository.find(n);
   }
 
-  public HistoryElement save(String hash, String target, Timestamp created, String ip) {
+  public HistoryElement save(String hash, String target, Timestamp created) {
     HistoryElement su = HistoryElementBuilder.newInstance()
         .hash(hash)
         .target(target)
         .created(created)
-        .ip(ip)
         .build();
     return historyRepository.save(su);
   }
 
-  public Long count(){
-    return historyRepository.count();
+  public void save(List<ShortURL> l) {
+    List<HistoryElement> list = new ArrayList();
+    for(ShortURL su : l){
+      list.add(HistoryElementBuilder.newInstance()
+        .hash(su.getHash())
+        .target(su.getTarget())
+        .created(su.getCreated())
+        .build());
+    }
+    historyRepository.save(list);
   }
 
-  public Integer countByIp(String ip){
-    return historyRepository.countByIp(ip);
+  public Integer count(){
+    return historyRepository.count();
   }
 }

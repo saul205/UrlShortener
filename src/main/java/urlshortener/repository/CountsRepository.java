@@ -14,4 +14,6 @@ public interface CountsRepository {
   Counts findByHash(String hash);
 
   List<Counts> findByTarget(String target);
+
+  List<Counts> list();
 }

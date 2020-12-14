@@ -84,6 +84,17 @@ public class UrlShortenerController {
         ReachableService.main(null);
       } catch (Exception e) {}
     });
+
+    executor.submit(() -> {
+      try {
+        ReachableService.main(null);
+      } catch (Exception e) {}
+    });
+    executor.submit(() -> {
+      try {
+        ReachableService.main(null);
+      } catch (Exception e) {}
+    });
   }
 
   @RequestMapping(value = "/{id:(?!link|index|sh).*}", method = RequestMethod.GET)
@@ -133,13 +144,7 @@ public class UrlShortenerController {
       HttpHeaders h = new HttpHeaders();
       h.setLocation(su.getUri());
 
-      logger.info("AYUDAAA");
-      logger.info(new Boolean(su == null).toString());
       reachableSVC.sender(su);
-
-      executor.submit(() -> {
-        HistoryElement s = historyService.save(su.getHash(), su.getTarget(), su.getCreated(), su.getIP());
-      });
 
       return new ResponseEntity<>(su, h, HttpStatus.CREATED);
     } else {

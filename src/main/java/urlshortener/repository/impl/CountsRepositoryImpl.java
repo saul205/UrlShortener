@@ -78,6 +78,7 @@ public class CountsRepositoryImpl implements CountsRepository{
     }
   }
 
+  @Override
   public Counts findByHash(String hash){
     try{
         return jdbc.queryForObject("SELECT * FROM CONTADOR WHERE HASH=?", rowMapper, hash);
@@ -86,9 +87,19 @@ public class CountsRepositoryImpl implements CountsRepository{
     }
   }
 
+  @Override
   public List<Counts> findByTarget(String target){
     try{
         return jdbc.query("SELECT * FROM CONTADOR WHERE target=?", rowMapper, target);
+    }catch(Exception e){
+        return null;
+    }
+  }
+
+  @Override
+  public List<Counts> list(){
+    try{
+      return jdbc.query("SELECT * FROM CONTADOR where hash != \"shu\" and hash != \"clk\"", rowMapper);
     }catch(Exception e){
         return null;
     }

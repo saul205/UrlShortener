@@ -132,6 +132,10 @@ public class ShortURLRepositoryImpl implements ShortURLRepository{
   @Override
   public List<ShortURL> list(Long limit, Long offset) {
     try {
+      if(limit == -1L){
+        return jdbc.query("SELECT * FROM shorturl OFFSET ?",
+          new Object[] {offset}, rowMapper);
+      }
       return jdbc.query("SELECT * FROM shorturl LIMIT ? OFFSET ?",
           new Object[] {limit, offset}, rowMapper);
     } catch (Exception e) {
@@ -152,9 +156,9 @@ public class ShortURLRepositoryImpl implements ShortURLRepository{
   }
 
   @Override
-  public List<ShortURL> lastNByIp(String Ip, Integer n){
+  public List<ShortURL> lastN(Integer n){
     try {
-      return jdbc.query("SELECT * FROM shorturl WHERE ip=? ORDER BY created DESC LIMIT " + n, new Object[]{Ip}, rowMapper);
+      return jdbc.query("SELECT * FROM shorturl ORDER BY created DESC LIMIT " + n, rowMapper);
     }catch(Exception e){
       log.debug("When selecting last " + n + " shorted urls");
       return Collections.emptyList();

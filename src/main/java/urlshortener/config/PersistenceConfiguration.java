@@ -9,7 +9,11 @@ import urlshortener.repository.HistoryRepository;
 import urlshortener.repository.impl.ClickRepositoryImpl;
 import urlshortener.repository.impl.ShortURLRepositoryImpl;
 import urlshortener.repository.impl.HistoryRepositoryImpl;
+import urlshortener.service.ClickService;
+import urlshortener.service.CountsService;
+import urlshortener.service.MostVisitedService;
 import urlshortener.service.ReachableService;
+import urlshortener.service.ShortURLService;
 import urlshortener.repository.CountsRepository;
 import urlshortener.repository.impl.CountsRepositoryImpl;
 import urlshortener.repository.MostVisitedRepository;
@@ -53,7 +57,6 @@ public class PersistenceConfiguration {
   MostVisitedRepository mostVisitedRepository(){
     return new MostVisitedRepositoryImpl(jdbc);
   }
-
   /*@Bean
   ReachableService reachableSVC() {
     return new ReachableService(null);

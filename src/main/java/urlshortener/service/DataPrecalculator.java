@@ -5,7 +5,10 @@ import java.net.SocketTimeoutException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+import org.json.simple.*;
+
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
 
 //Implementacion de RbbMQ con spring es secuencial
 //import org.springframework.amqp.rabbit.connection.ConnectionFactory;
@@ -14,54 +17,81 @@ import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.DeliverCallback;
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 
-import urlshortener.domain.ShortURL;
-import urlshortener.repository.ShortURLRepository;
 import urlshortener.service.ShortURLService;
+import urlshortener.service.ClickService;
+import urlshortener.service.CountsService;
+import urlshortener.service.HistoryService;
+import urlshortener.service.MostVisitedService;
+import urlshortener.ApplicationContextProvider;
+import urlshortener.domain.Click;
+import urlshortener.domain.Counts;
+import urlshortener.domain.ShortURL;
+import urlshortener.domain.HistoryElement;
+import urlshortener.repository.impl.Tuple;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
+import urlshortener.ApplicationContextProvider;
+
 @Service
-public class ReachableService {
+public class DataPrecalculator {
 
-  private static final Logger logger = LoggerFactory.getLogger(ReachableService.class);
+  private static final Logger logger = LoggerFactory.getLogger(DataPrecalculator.class);
 
-  public static final String JOBS_TO_DO = "JOBS_TO_DO";
-  public static final String FINISHED_JOBS = "FINISHED_JOBS";
+  private final ClickService clickService;
+
+  private final ShortURLService shortURLService;
+
+  private final CountsService countsService;
+
+  private final HistoryService historyService;
+
+  private final MostVisitedService mostVisitedService;
+
+  public static final String JOBS_TO_DO = "PRECALCULUS_TO_DO";
+  public static final String FINISHED_JOBS = "FINISHED_PRECALCULUS";
 
   // Worker's method (Worker's Work)
-  private static Integer Work(String str_url){
-    Boolean rble = false;
-    URL url; HttpURLConnection huc;
-    try {
-      url = new URL(str_url);
-      // setFollowRedirects -> SecurityException
-      HttpURLConnection.setFollowRedirects(false);
-      huc = (HttpURLConnection) url.openConnection();
-      huc.setConnectTimeout(10000);
-      huc.getResponseCode();
-      rble = true;
-    } catch(UnknownHostException u) {
-      rble = false;
-    } catch(SocketTimeoutException s) {
-      rble = false;
-    } catch(Exception e1) { // SecurityException || IOException
-      try{
-        url = new URL(str_url);
-        HttpURLConnection.setFollowRedirects(true); // By default
-        huc = (HttpURLConnection) url.openConnection();
-        huc.setConnectTimeout(10000);
-        huc.getResponseCode();
-        rble = true;
-      } catch (Exception e2){ //SocketTimeoutException, IOException or unknown exception
-        rble = false;
-      }
-    } 
-    Integer r;
-    if (rble) r = 1;
-    else r = -1;
-    return r;
+  private void Work(String str){
+
+    if(str.equals("precalculate-1")){
+      updateProcess1();
+    }else if(str.equals("precalculate-2")){
+      updateProcess2();
+    }
+    
+  }
+
+  private void updateProcess2(){
+    
+    logger.info("UPDATEPROCESS2");
+    List<ShortURL> s = shortURLService.list();
+
+		for(ShortURL shu : s){
+			Long c = clickService.clicksByHash(shu.getHash());
+			countsService.save(shu.getTarget(), c, false);
+		}
+  }
+
+  private void updateProcess1(){
+
+    logger.info("UPDATEPROCESS1");
+
+    Long c = shortURLService.count();
+    countsService.save("shu", c, true);
+
+    c = clickService.count();
+    countsService.save("cl", c, true);
+
+    List<Tuple> urls = clickService.getTopN(10);
+    mostVisitedService.save(urls);
+
+    List<ShortURL> s = shortURLService.getLastN(10);
+    historyService.save(s);
   }
 
   // Suscriber (Worker)
@@ -85,16 +115,12 @@ public class ReachableService {
     DeliverCallback deliverCallback = (consumerTag, delivery) -> {
       String message = new String(delivery.getBody(), "UTF-8");
       //logger.info("---> [WORKER|r]: " + message);
-      String[] splitted = message.split(",");
-      if (splitted.length == 2){
 
-        Integer aux = Work(splitted[1]);
-        message = splitted[0] + "," + aux.toString();
-        //logger.info("---> [WORKER|s]: " + message);
-        channel.basicPublish("", FINISHED_JOBS, null, message.getBytes(StandardCharsets.UTF_8));
+      new DataPrecalculator(new String[] {}).Work(message);
 
-        channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
-      }
+      channel.basicPublish("", FINISHED_JOBS, null, "finished".getBytes(StandardCharsets.UTF_8));
+
+      channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
     };
 
     channel.basicConsume(JOBS_TO_DO, false, deliverCallback, consumerTag -> { });
@@ -104,7 +130,14 @@ public class ReachableService {
   private Connection conn;
   private Channel ch;
 
-  public ReachableService(String[] args) {
+  public DataPrecalculator(String[] args) {
+
+    shortURLService = ApplicationContextProvider.getContext().getBean(ShortURLService.class);
+    clickService = ApplicationContextProvider.getContext().getBean(ClickService.class);
+    mostVisitedService = ApplicationContextProvider.getContext().getBean(MostVisitedService.class);
+    countsService = ApplicationContextProvider.getContext().getBean(CountsService.class);
+    historyService = ApplicationContextProvider.getContext().getBean(HistoryService.class);
+
     try {
       // ASSUME ip = localhost, port = 5672 and rabbitmq default account
       /*if (args.length != 2){
@@ -124,33 +157,11 @@ public class ReachableService {
     } catch (Exception e) {
       logger.info(e.toString());
     }
-    
   }
 
-  public void receiver(ShortURLService surlsvc) {
+  public void receiver() {
     DeliverCallback deliverCB = (consumerTag, delivery) -> {
-
-      new Thread(() -> {
-        try {
-          String message = new String(delivery.getBody(), "UTF-8");
-          //logger.info("---> [RECEIVER|r]: " + message);
-          String[] splitted = message.split(",");
-          if (splitted.length == 2){
-            ShortURL surl = surlsvc.findByKey(splitted[0]);
-            if (surl != null) {
-              surl.setAlcanzable(Integer.valueOf(splitted[1]));
-              surlsvc.update(surl);
-
-              if (surl.getAlcanzable() == 1) surlsvc.checkSafe(new ShortURL[] {surl});
-            }
-          }
-        } catch (Exception e) {
-          logger.info(e.toString());
-        }
-      }).start();
-
       ch.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
-
     };
 
     try {
@@ -160,14 +171,11 @@ public class ReachableService {
     }
   }
 
-  public void sender(ShortURL surl) {
-    if (surl == null) return;
-    logger.info("---> [SURL|s]: ");
-    String msg = surl.getHash() + "," + surl.getTarget();
-    logger.info("---> [SENDER|s]: " + msg);
+  public void sender() {
 
     try {
-      ch.basicPublish("", JOBS_TO_DO, null, msg.getBytes(StandardCharsets.UTF_8));
+      ch.basicPublish("", JOBS_TO_DO, null, "precalculate-1".getBytes(StandardCharsets.UTF_8));
+      ch.basicPublish("", JOBS_TO_DO, null, "precalculate-2".getBytes(StandardCharsets.UTF_8));
     } catch (Exception e) {
       logger.info(e.toString());
     }

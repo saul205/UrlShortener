@@ -18,6 +18,7 @@ import java.sql.Statement;
 import java.sql.Types;
 
 import urlshortener.domain.HistoryElement;
+import urlshortener.domain.ShortURL;
 import urlshortener.repository.HistoryRepository;
 
 import java.net.URI;
@@ -30,7 +31,7 @@ public class HistoryRepositoryImpl implements HistoryRepository{
 
   private static final RowMapper<HistoryElement> rowMapper =
       (rs, rowNum) -> new HistoryElement(rs.getLong("id"), 
-      rs.getString("hash"), rs.getString("target"), rs.getTimestamp("created"), rs.getString("ip"));
+      rs.getString("hash"), rs.getString("target"), rs.getTimestamp("created"));
 
   private final JdbcTemplate jdbc;
 
@@ -39,10 +40,10 @@ public class HistoryRepositoryImpl implements HistoryRepository{
   }
 
   @Override
-  public List<HistoryElement> findByHashIp(String hash, String ip, Integer n) {
+  public List<HistoryElement> findByHash(String hash, Integer n) {
     try {
-      return jdbc.query("SELECT * FROM HISTORIAL WHERE hash = ? and ip = ? limit " + n,
-          rowMapper, hash, ip);
+      return jdbc.query("SELECT * FROM HISTORIAL WHERE hash = ? limit " + n,
+          rowMapper, hash);
     } catch (Exception e) {
       log.debug("When select for key {}", hash, e);
       return null;
@@ -50,12 +51,12 @@ public class HistoryRepositoryImpl implements HistoryRepository{
   }
 
   @Override
-  public List<HistoryElement> findByIp(String ip, Integer n) {
+  public List<HistoryElement> find(Integer n) {
     try {
-      return jdbc.query("SELECT * FROM HISTORIAL WHERE ip = ? ORDER BY created DESC limit " + n,
-          rowMapper, ip);
+      return jdbc.query("SELECT * FROM HISTORIAL ORDER BY created DESC limit " + n,
+          rowMapper);
     } catch (Exception e) {
-      log.debug("When select for key {}", ip, e);
+      log.debug("When select for key", e);
       return null;
     }
   }
@@ -63,16 +64,15 @@ public class HistoryRepositoryImpl implements HistoryRepository{
   @Override
   public HistoryElement save(final HistoryElement he) {
     try {
-      String ip = he.getIp();
-      List<HistoryElement> exists = findByHashIp(he.getHash(), ip, 1);
+      List<HistoryElement> exists = findByHash(he.getHash(), 1);
       if(exists.size() > 0){
         update(he);
         return he;
       }
 
-      Integer c = countByIp(ip);
+      Integer c = count();
       if(c == 10){
-        exists = findOlderIp(ip);
+        exists = findOlder();
         delete(exists.get(0).getId());
       }
 
@@ -80,37 +80,70 @@ public class HistoryRepositoryImpl implements HistoryRepository{
       jdbc.update(conn -> {
         PreparedStatement ps = conn
             .prepareStatement(
-                "INSERT INTO HISTORIAL VALUES (?, ?, ?, ?, ?)",
+                "INSERT INTO HISTORIAL VALUES (?, ?, ?, ?)",
                 Statement.RETURN_GENERATED_KEYS);
         ps.setNull(1, Types.BIGINT);
         ps.setString(2, he.getHash());
         ps.setString(3, he.getTarget());
         ps.setTimestamp(4, he.getCreated());
-        ps.setString(5, he.getIp());
         return ps;
       }, holder);
       if (holder.getKey() != null) {
         new DirectFieldAccessor(he).setPropertyValue("id", holder.getKey()
             .longValue());
       } else {
-        log.debug("Key from database is null");
+        log.info("Key from database is null");
       }
     } catch (DuplicateKeyException e) {
-      log.debug("When insert for historyElement with id " + he.getId(), e);
+      log.info("When insert for historyElement with id " + he.getId(), e);
       return he;
     } catch (Exception e) {
-      log.debug("When insert a historyElement", e);
+      log.info("When insert a historyElement", e);
       return null;
     }
     return he;
   }
 
   @Override
+  public void save(final List<HistoryElement> l){
+
+    jdbc.update("delete from historial where true");
+
+    for(int i = 0; i < 10 && i < l.size(); i++){
+      final HistoryElement h = l.get(i);
+      try{
+        KeyHolder holder = new GeneratedKeyHolder();
+        jdbc.update((conn) -> {
+          PreparedStatement ps = conn
+              .prepareStatement(
+                  "INSERT INTO HISTORIAL VALUES (?, ?, ?, ?)",
+                  Statement.RETURN_GENERATED_KEYS);
+          ps.setNull(1, Types.BIGINT);
+          ps.setString(2, h.getHash());
+          ps.setString(3, h.getTarget());
+          ps.setTimestamp(4, h.getCreated());
+          return ps;
+        }, holder);
+        if (holder.getKey() != null) {
+          new DirectFieldAccessor(l.get(i)).setPropertyValue("id", holder.getKey()
+              .longValue());
+        } else {
+          log.info("Key from database is null");
+        }
+      }catch (DuplicateKeyException e) {
+        log.info("When insert for historyElement", e);
+      }catch(Exception e){
+        log.info("When insert for historyElement", e);
+      }
+    }
+  }
+
+  @Override
   public void update(HistoryElement he) {
     try {
       jdbc.update(
-          "update historial set created=? where hash=? and ip=?",
-          he.getCreated(), he.getHash(), he.getIp());
+          "update historial set created=? where hash=?",
+          he.getCreated(), he.getHash());
     } catch (Exception e) {
       log.debug("When update for hash {}", he.getHash(), e);
     }
@@ -126,33 +159,22 @@ public class HistoryRepositoryImpl implements HistoryRepository{
   }
 
   @Override
-  public Long count() {
+  public Integer count() {
     try {
       return jdbc.queryForObject("select count(*) from historial",
-          Long.class);
-    } catch (Exception e) {
-      log.debug("When counting", e);
-    }
-    return -1L;
-  }
-
-  @Override
-  public Integer countByIp(String ip) {
-    try {
-      return jdbc.queryForObject("select count(*) from historial where ip = ?", new Object[] {ip},
-        Integer.class);
+      Integer.class);
     } catch (Exception e) {
       log.debug("When counting", e);
     }
     return -1;
   }
 
-  public List<HistoryElement> findOlderIp(String ip){
+  public List<HistoryElement> findOlder(){
     try {
-      return jdbc.query("SELECT * FROM historial WHERE ip=? order by created ASC Limit 1",
-          rowMapper, ip);
+      return jdbc.query("SELECT * FROM historial order by created ASC Limit 1",
+          rowMapper);
     } catch (Exception e) {
-      log.debug("When select for key {}", ip, e);
+      log.debug("When select older", e);
       return null;
     }
   }

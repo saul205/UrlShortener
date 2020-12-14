@@ -10,14 +10,13 @@ public class HistoryElementBuilder {
   private String hash;
   private String target;
   private Timestamp created;
-  private String ip;
 
   static HistoryElementBuilder newInstance() {
     return new HistoryElementBuilder();
   }
 
   HistoryElement build() {
-    return new HistoryElement(null, hash, target, created, ip);
+    return new HistoryElement(null, hash, target, created);
   }
 
   HistoryElementBuilder hash(String hash) {
@@ -27,11 +26,6 @@ public class HistoryElementBuilder {
 
   HistoryElementBuilder created(Timestamp created) {
     this.created = created;
-    return this;
-  }
-
-  HistoryElementBuilder ip(String ip) {
-    this.ip = ip;
     return this;
   }
 
