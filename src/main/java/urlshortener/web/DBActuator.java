@@ -1,19 +1,20 @@
 package urlshortener.web;
 
-import org.apache.commons.validator.routines.UrlValidator;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-
 import urlshortener.service.ShortURLService;
-import urlshortener.domain.ShortURL;
 import urlshortener.service.ClickService;
+import urlshortener.service.CountsService;
+import urlshortener.service.DataPrecalculator;
+import urlshortener.service.HistoryService;
+import urlshortener.service.MostVisitedService;
 import urlshortener.domain.Click;
+import urlshortener.domain.Counts;
+import urlshortener.domain.ShortURL;
+import urlshortener.domain.HistoryElement;
+
 import org.json.simple.JSONObject;
 import org.json.simple.JSONArray;
 
@@ -21,68 +22,133 @@ import org.springframework.stereotype.Component;
 import org.springframework.boot.actuate.endpoint.annotation.*;
 
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.Collections;
+
 import urlshortener.repository.impl.Tuple;
 import org.springframework.web.bind.annotation.RestController;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Component
 @Endpoint(id = "data")
 public class DBActuator{
 
-  private final ShortURLService shortUrlService;
+	
+  private static final Logger logger = LoggerFactory.getLogger(UrlShortenerController.class);
 
-  private final ClickService clickService;
+  private final CountsService countsService;
 
-  public DBActuator(ShortURLService shortUrlService, ClickService clickService) {
-		this.shortUrlService = shortUrlService;
-		this.clickService = clickService;
+  private final MostVisitedService mostVisitedService;
+  
+  private final ScheduledExecutorService executor;
+
+  private final HistoryService historyService;
+
+  private final DataPrecalculator dataPrecalculator;
+
+  public DBActuator(CountsService countsService, 
+					  MostVisitedService mostVisitedService,
+					  HistoryService historyService,
+					  DataPrecalculator dataPrecalculator) {
+
+		this.countsService = countsService;
+		this.mostVisitedService = mostVisitedService;
+		this.historyService = historyService;
+		this.dataPrecalculator = dataPrecalculator;
+
+		executor = Executors.newScheduledThreadPool(2);
+
+		executor.submit(() -> {
+			try {
+				dataPrecalculator.receiver();
+			} catch (Exception e) {}
+		});
+
+		executor.submit(() -> {
+			try {
+				DataPrecalculator.main(null);
+			} catch (Exception e) {}
+		});
+
+		executor.submit(() -> {
+			try {
+				DataPrecalculator.main(null);
+			} catch (Exception e) {}
+		});
+
+		scheduledUpdate();
+  }
+
+  public void scheduledUpdate(){
+	  TimerTask task = new TimerTask() {
+		  public void run() {
+			  updateProcess();
+		  }
+		};
+	  executor.scheduleAtFixedRate(task, 0L, 10000L, TimeUnit.MILLISECONDS);
   }
 	  
   @ReadOperation
   public ResponseEntity<JSONObject> getData(){
-		List<Tuple> urls = clickService.getTopN(10);
 
-		JSONObject obj = new JSONObject();
+		List<Counts> counts = mostVisitedService.find();
 		JSONObject mainObj = new JSONObject();
 
-		int i = 0;
-		for(Tuple u : urls){
-			JSONObject j = new JSONObject();
-			j.put(u.getKey(), u.getValue());
-			obj.put(i, j);
-			i++;
+		Counts c = countsService.findByHash("cl");
+		if(c == null){
+			mainObj.put("clicks", 0);
+		}else{
+			mainObj.put("clicks", c.getCount());
 		}
 
-		mainObj.put("clicks", clickService.count());
-		mainObj.put("urls", shortUrlService.count());
-		mainObj.put("top", obj);
+		c = countsService.findByHash("shu");
+		if(c == null){
+			mainObj.put("urls", 0);
+		}else{
+			mainObj.put("urls", c.getCount());
+		}
+
+		mainObj.put("historial", historyService.find(10));
+		mainObj.put("top", counts);
+		updateProcess();
 		
 		return new ResponseEntity<>(mainObj, HttpStatus.OK);
   }
 
+  private void updateProcess(){
+	  dataPrecalculator.sender();
+  }
+
     @WriteOperation
- 	public ResponseEntity<JSONObject> getTargetCount(@RequestParam("url") String target){
+ 	public ResponseEntity<JSONObject> getTargetCount(String target){
 
 		if(target == "") return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 
-		List<ShortURL> urls = shortUrlService.findByTarget(target);
+		List<Counts> urls = countsService.findByTarget(target);
 		JSONObject json = new JSONObject();
 
 		if(urls.size() == 0){
 			json.put("target", target);	
-			json.put("count", 0);	
+			json.put("count", 0);
+
+			updateProcess();
 			return new ResponseEntity<>(json, HttpStatus.OK);
 		}
 
 		String clkText = "";
-		for(ShortURL u : urls){
-			Long count = clickService.clicksByHash(u.getHash());
-			json.put("target", target);
+		for(Counts u : urls){
+			json.put("target", u.getTarget());
 			json.put("hash", u.getHash());
-			json.put("count", count);
-
-			//TODO Quitar
-			json.put("alcanzable", u.getAlcanzable());
+			json.put("count", u.getCount());
 		}
+
+		updateProcess();
 		return new ResponseEntity<>(json, HttpStatus.OK);
 	}
 }

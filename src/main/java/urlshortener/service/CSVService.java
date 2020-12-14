@@ -4,6 +4,7 @@ import org.springframework.stereotype.Service;
 
 import urlshortener.service.ShortURLService;
 import urlshortener.service.ReachableService;
+import urlshortener.service.HistoryService;
 import urlshortener.service.CSVGenerator;
 import urlshortener.domain.ShortURL;
 import urlshortener.ApplicationContextProvider;
@@ -22,20 +23,18 @@ public class CSVService {
     ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     ShortURLService sus = ApplicationContextProvider.getContext().getBean(ShortURLService.class);
     ReachableService rs = ApplicationContextProvider.getContext().getBean(ReachableService.class);
+    HistoryService h = ApplicationContextProvider.getContext().getBean(HistoryService.class);
 
     String sol = "";
     String lines[] = line.split("\n");
     int len = lines.length - 1;
-    int lenSu = 0;
     ArrayList<ShortURL> su = new ArrayList<>();
-    for(int i = 0; i < len && i < 500; ++i) {
+    for(int i = 0; i < len; ++i) {
       String res = CSVGenerator.readLine(lines[i]);
       if(!res.contains(",,")) {
         su.add(sus.save(res, "", lines[len], false));
-        res += ",http://localhost:8080/" + su.get(i).getHash();
-      } else {
-        ++lenSu;
-      }
+        res += ",http://localhost:8080/" + su.get(i).getHash() + ",";
+      } 
       sol += res + "\n";
     }
 
