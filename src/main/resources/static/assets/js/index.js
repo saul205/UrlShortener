@@ -1,4 +1,5 @@
 $(document).ready( function(){
+    $("#top-list").ready(function(){stats()});
     $("#buttonSendUrl").click( function(event){
         event.preventDefault();
         var check = document.getElementById("checkbox").checked
@@ -10,17 +11,7 @@ $(document).ready( function(){
             error: function (msg,err) { resLink(msg, err); }
         });
     });
-    $("#search").submit(function(e){search(e)});
-    $("#top-list").ready(function(){stats()});
-    $("#history-list").ready(function(){
-        $.ajax({
-            type: "GET",
-            url: "/db/history",
-            data: null,
-            success: function (msg,err) { historial(msg, err); },
-            error: function (msg,err) { historial(msg, err); }
-        });
-    });
+    $("#search").submit(search);
 });
 
 function resLink(msg, st){
@@ -43,26 +34,6 @@ function fechafuera(date){
     return str.slice(0,16)
 }
 
-function historial(msg, st){
-    if (st === "success"){
-        if (Object.keys(msg).length === 0){
-            st = "abort"
-        } else {
-            let list = "";
-            for(var key in msg){
-                for(var key2 in msg[key]){
-                    let str = "<li value="+key+"> \(" + fechafuera(msg[key][key2]) + "\) ";
-                    let a = "<a href="+key2+">"+truncateText(key2)+"</a>";
-                    list = list + str + a + "</li>"
-                }
-            }
-            $("#history-list").html(list);
-        }
-    }
-    if (st === "timeout" || st ===  "error" | st === "abort" || st === "parsererror"){
-        $("#history").parent().replaceWith("");
-    }
-}
 const truncateText = (text) => {
   var truncated = text;
   if (text.length > 30) {
@@ -74,12 +45,13 @@ const truncateText = (text) => {
 function stats(){
     $.ajax({
         type: "GET",
-        url: "/db",
+        url: "/actuator/data",
         data: $(this).serialize(),
         success: function (msg) {
             topl(msg.top);
             $("#urls-int").html(msg.urls);
             $("#clicks-int").html(msg.clicks);
+            $("#history-list").html(historial(msg.historial));
         },
         error: function () {
             $("#urls-int").html("err");
@@ -89,29 +61,55 @@ function stats(){
 }
 function topl(urls){
     let list = "";
-    for(var key in urls){
-        for(var key2 in urls[key]){
-            let str = "<li value=" + key + "> \(" + urls[key][key2] + " uses \) ";
-            let a = "<a href="+key2+">"+truncateText(key2)+"</a>";
-            list = list + str + a + "</li>"
-        }
+    console.log(urls)
+    for(var element in urls){
+        console.log(element)
+        let str = "<li value=" + element + "> \(" + urls[element].count + " uses \) ";
+        let a = "<a href="+urls[element].target+">"+truncateText(urls[element].target)+"</a>";
+        list = list + str + a + "</li>"
     }
+
     $("#top-list").html(list);
+}
+
+function historial(urls){
+    let list = "";
+    console.log(urls)
+    for(var element in urls){
+        console.log(element)
+        let str = "<li value=" + element + ">" + urls[element].target + "<br>";
+        let a = "<a href="+window.location.href + "/" + urls[element].hash+">"+truncateText(window.location.href + "/" + urls[element].hash)+"</a><br>";
+        list = list + str + a +  urls[element].created + "</li>"
+    }
+
+    $("#history-list").html(list);
 }
 
 function search(event){
     event.preventDefault();
-    $.post(
-        "/db/search",
-        {url: $("#searchField").val()},
-        function(result){
+    console.log($("#searchField").val())
+    $.ajax({
+        type: "POST",
+        url: "/actuator/data",
+        dataType : "json",
+        data: "{\"target\": \"" + $("#searchField").val()+"\"}",
+        headers: {"Content-Type": "application/json"},
+        success: function(result){
             $("#searchResult").html(
                 "<div>"
                 + result.target
                 + "<br>"
                 + result.count
                 + "</div>"
-            );
+        )},
+        error: function () {
+            $("#searchResult").html(
+                "<div>"
+                + result.target
+                + "<br>"
+                + result.count
+                + "</div>"
+        )
         }
-    )
+    });
 }

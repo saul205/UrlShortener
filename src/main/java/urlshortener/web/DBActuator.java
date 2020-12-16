@@ -128,6 +128,8 @@ public class DBActuator{
     @WriteOperation
  	public ResponseEntity<JSONObject> getTargetCount(String target){
 
+		logger.info("TARGET: " + target);
+
 		if(target == "") return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 
 		List<Counts> urls = countsService.findByTarget(target);
