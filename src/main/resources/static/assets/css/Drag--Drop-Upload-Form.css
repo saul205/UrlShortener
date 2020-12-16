@@ -9,7 +9,7 @@
   padding: 0;
 }
 
-#inputURL input {
+#inputURL #SendUrl {
   height: 30px;
   width: 100%;
   border-radius: 10px;
@@ -259,5 +259,22 @@ input:focus, select:focus, textarea:focus, button:focus {
 
 #result a {
   color: #3df223;
+}
+
+.form-check-input {
+  width: 100%;
+}
+
+.form-check {
+}
+
+.formcheck {
+  text-align: left;
+}
+
+.form-checkbox {
+  margin-top: 6px;
+  margin-right: 10px;
+  transform: scale(1.5);
 }
 

@@ -1,10 +1,11 @@
 $(document).ready( function(){
     $("#buttonSendUrl").click( function(event){
         event.preventDefault();
+        var check = document.getElementById("checkbox").checked
         $.ajax({
             type: "POST",
             url: "/link",
-            data: $("#SendUrl").serialize().concat("&qr=true"),
+            data: $("#SendUrl").serialize().concat("&qr=" + check),
             success: function (msg,err) { resLink(msg, err); },
             error: function (msg,err) { resLink(msg, err); }
         });
