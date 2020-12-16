@@ -1,5 +1,5 @@
-dropArea = document.getElementById("files") || null;
-if (dropArea !== null) dropArea.addEventListener('drop', changeType, false);
+//dropArea = document.getElementById("files") || null;
+//if (dropArea !== null) dropArea.addEventListener('drop', null, false);
 var file = null;
 var ws;
 var ip = "";
@@ -15,7 +15,8 @@ $(document).ready( function(){
   });
   $("#choosefile").click( function(event){
       //var form = new FormData()
-      connect()
+      if(file) connect()
+      original()
       //form.append('file', file)
       //event.preventDefault()
       /*$.ajax({
@@ -40,7 +41,7 @@ $(document).ready( function(){
   });
 });
 
-function download(filename, text)  {
+function download(filename, text) {
   var element = document.createElement('a');
   element.setAttribute('href', 'data:application/csv;charset=utf-8,' + encodeURIComponent(text));
   element.setAttribute('download', filename);  
@@ -51,29 +52,47 @@ function download(filename, text)  {
 }
 
 function handleClick() {
-  var type = document.getElementById("choosefile");
+  var type = document.getElementById("choosefile")
   if(type.innerHTML.localeCompare("Upload file") != 0) {
-    var input = document.getElementById("files");
-    document.getElementById("dropfile").innerHTML = input.files.item(0).name;
-    file = input.files.item(0)
-    change();
+    var input = document.getElementById("files")
+    if(input.files.item(0).name.endsWith(".csv")) {
+      document.getElementById("dropfile").innerHTML = input.files.item(0).name
+      file = input.files.item(0)
+      change()
+    } else {
+      alert("Tipo de archivo no permitido (diferente a .csv)")
+    }
   }
 }
 
-function changeType(e) {
+/*function changeType(e) {
+  console.log("CHANGETYPE")
   var dt = event.dataTransfer
   var files = dt.files
-  document.getElementById("dropfile").innerHTML = files[0].name
-  file = files[0]
-  change()
-}
+  if(files[0].name.endsWith(".csv")) {
+    document.getElementById("dropfile").innerHTML = files[0].name
+    file = files[0]
+    change()
+  } else {
+    alert("Tipo de archivo no permitido (diferente a .csv)")
+  }
+}*/
 
 function change() {
-  document.getElementById("orfile").innerHTML = "";
-  document.getElementById("choosefile").innerHTML = "Upload file";
-  document.getElementById("choosefile").style.zIndex = "10000";
-  document.getElementById("choosefile").style.position = "relative";
-  document.getElementById("choosefile").style.cursor = "pointer";
+  document.getElementById("orfile").innerHTML = ""
+  document.getElementById("choosefile").innerHTML = "Upload file"
+  document.getElementById("choosefile").style.zIndex = "10000"
+  document.getElementById("choosefile").style.position = "relative"
+  document.getElementById("choosefile").style.cursor = "pointer"
+}
+
+function original() {
+  document.getElementById("orfile").innerHTML = "or"
+  document.getElementById("choosefile").innerHTML = "Choose file"
+  document.getElementById("dropfile").innerHTML = "Drop your .csv file"
+  document.getElementById("choosefile").style.zIndex = ""
+  document.getElementById("choosefile").style.position = ""
+  document.getElementById("choosefile").style.cursor = ""
 }
 
 function connect() {
@@ -82,9 +101,8 @@ function connect() {
     if(data.data == "Connected") {
       sendData()
     } else {
-      ws.send("END")
-      disconnect()
       download(file.name.substring(0, file.name.length - 4) + "-short.csv", data.data)
+      disconnect()
     }
   }
 }

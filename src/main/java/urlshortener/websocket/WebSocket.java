@@ -29,6 +29,7 @@ public class WebSocket {
     } else {
       CSVService csv = ApplicationContextProvider.getContext().getBean(CSVService.class);
       session.getAsyncRemote().sendText(csv.generateLine(message));
+      session.close(new CloseReason(CloseCodes.NORMAL_CLOSURE, "create CSV"));
     }
   }
 

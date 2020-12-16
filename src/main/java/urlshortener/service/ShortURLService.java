@@ -42,6 +42,10 @@ public class ShortURLService {
     return shortURLRepository.findByKey(id);
   }
 
+  public List<ShortURL> list(){
+    return shortURLRepository.list(-1L, 0L);
+  }
+
   public ShortURL save(String url, String sponsor, String ip, Boolean qrres) {
     ShortURL su = ShortURLBuilder.newInstance()
         .target(url)
@@ -141,8 +145,8 @@ public class ShortURLService {
     }
   }
 
-  public List<ShortURL> getLastNByIp(String Ip, Integer n){
-    return shortURLRepository.lastNByIp(Ip, n);
+  public List<ShortURL> getLastN(Integer n){
+    return shortURLRepository.lastN(n);
   }
 
   public void update(ShortURL su){

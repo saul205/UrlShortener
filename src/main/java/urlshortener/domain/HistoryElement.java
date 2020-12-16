@@ -8,14 +8,12 @@ public class HistoryElement {
   private final String hash;
   private final String target;
   private final Timestamp created;
-  private final String ip;
 
-  public HistoryElement(Long id, String hash, String target, Timestamp created, String ip) {
+  public HistoryElement(Long id, String hash, String target, Timestamp created) {
     this.id = id;
     this.hash = hash;
     this.target = target;
     this.created = created;
-    this.ip = ip;
   }
 
   public Long getId() {
@@ -32,9 +30,5 @@ public class HistoryElement {
 
   public Timestamp getCreated() {
     return created;
-  }
-
-  public String getIp() {
-    return ip;
   }
 }
