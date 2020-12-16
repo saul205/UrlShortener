@@ -20,7 +20,12 @@
                     <div class="col-lg-8 mx-auto">
                         <h1 class="brand-heading">java =<strong>💩</strong></h1>
                         <div class="row">
-                            <div class="col" id="inputURL"><input type="url" id="SendUrl" name="url">
+                            <div class="col" id="inputURL">
+                                <input type="url" id="SendUrl" name="url">
+                                <div class="formcheck" style>
+                                    <input type="checkbox" id="checkbox" class="form-checkbox" />
+                                    <label for="checkbox" id="label" class="form-checkbox-label">Generar QR</label>
+                                </div>
                                 <div id="result"></div><button class="btn btn-primary" id="buttonSendUrl" type="button">SHORT ME!</button></div>
                         </div>
                         <div class="row">
@@ -83,8 +88,9 @@
     </div><form action="" id="search">
     Introduce una url para buscar el número de redirecciones<br>
     <input id="searchField" type="url">
-    <button type="submit">Buscar</button>
+    <button id="search-button" type="submit">Buscar</button>
 </form>
+<div id="searchResult"></div>
     <footer>
         <div class="container text-center">
             <p>Copyright © Java =&nbsp;💩 2020</p>

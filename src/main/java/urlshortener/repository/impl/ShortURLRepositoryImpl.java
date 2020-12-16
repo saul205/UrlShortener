@@ -62,7 +62,7 @@ public class ShortURLRepositoryImpl implements ShortURLRepository{
     } catch (DuplicateKeyException e) {
       log.debug("When insert for key {}", su.getHash(), e);
       try{
-        jdbc.update("UPDATE shorturl SET created=? WHERE hash=?", new Object[]{su.getCreated(), su.getHash()});
+        jdbc.update("UPDATE shorturl SET created=?, qr = ? WHERE hash=?", new Object[]{su.getCreated(), su.getQR(), su.getHash()});
       }catch(Exception e2){
         log.debug("When updating on DuplicateKey");
       }
