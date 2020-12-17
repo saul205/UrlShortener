@@ -258,14 +258,11 @@ input:focus, select:focus, textarea:focus, button:focus {
 }
 
 #result a {
-  color: #3df223;
+  color: #fff;
 }
 
 .form-check-input {
   width: 100%;
-}
-
-.form-check {
 }
 
 .formcheck {

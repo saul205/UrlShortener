@@ -64,7 +64,8 @@ function topl(urls){
     console.log(urls)
     for(var element in urls){
         console.log(element)
-        let str = "<li value=" + element + "> \(" + urls[element].count + " uses \) ";
+        var i = +element + +1;
+        let str = "<li value=" + i + "> \(" + urls[element].count + " uses\) ";
         let a = "<a href="+urls[element].target+">"+truncateText(urls[element].target)+"</a>";
         list = list + str + a + "</li>"
     }
@@ -77,7 +78,8 @@ function historial(urls){
     console.log(urls)
     for(var element in urls){
         console.log(element)
-        let str = "<li value=" + element + ">" + urls[element].target + "<br>";
+        var i = +element + +1;
+        let str = "<li value=" + i + ">" + truncateText(urls[element].target) + "<br>";
         let a = "<a href="+window.location.href + "/" + urls[element].hash+">"+truncateText(window.location.href + "/" + urls[element].hash)+"</a><br>";
         list = list + str + a +  urls[element].created + "</li>"
     }

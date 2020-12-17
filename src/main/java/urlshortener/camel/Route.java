@@ -49,7 +49,7 @@ public class Route extends RouteBuilder {
         from("direct:checkSafe")
             .aggregate(aggregation())
             .constant(true)
-            .completionTimeout(5000)
+            .completionTimeout(1000)
             .completionSize(500)
             .log("CURRENT: ${body}")
             .bean(ShortURLService.class, "checkSafe");
