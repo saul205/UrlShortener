@@ -29,11 +29,14 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.Collections;
 
-import urlshortener.repository.impl.Tuple;
-import org.springframework.web.bind.annotation.RestController;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 
 @Component
 @Endpoint(id = "data")
@@ -125,7 +128,7 @@ public class DBActuator{
 	  dataPrecalculator.sender();
   }
 
-    @WriteOperation
+	@WriteOperation
  	public ResponseEntity<JSONObject> getTargetCount(String target){
 
 		logger.info("TARGET: " + target);
