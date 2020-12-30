@@ -44,6 +44,8 @@ dependencies {
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.apache.httpcomponents:httpclient'
+
+    compile group: 'org.springdoc', name: 'springdoc-openapi-ui', version: '1.5.2'
 }
 
 clean.doFirst {

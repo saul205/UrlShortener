@@ -14,17 +14,16 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.core.io.FileSystemResource;
+
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
-
 
 import urlshortener.domain.Click;
 import urlshortener.domain.ShortURL;
+import urlshortener.domain.ErrorCode;
 import urlshortener.repository.ClickRepository;
 import urlshortener.repository.impl.Tuple;
 import urlshortener.service.ClickService;
@@ -105,6 +104,15 @@ public class UrlShortenerController {
     });
   }
 
+  @ApiResponses(value = { 
+    @ApiResponse(responseCode = "307", description = "Redirect to the corresponding page"),
+    @ApiResponse(responseCode = "400", description = "La aplicación no es alcanzable o segura", 
+    content = { @Content(mediaType = "application/json", 
+    schema = @Schema(implementation = ErrorCode.class)) }), 
+    @ApiResponse(responseCode = "409", description = "La aplicación no se sabe si es alcanzable o segura", 
+    content = { @Content(mediaType = "application/json", 
+    schema = @Schema(implementation = ErrorCode.class)) }), 
+    @ApiResponse(responseCode = "404", description = "Short-url not found", content = @Content) })
   @RequestMapping(value = "/{id:(?!link|index|sh).*}", method = RequestMethod.GET)
   public ResponseEntity<?> redirectTo(@PathVariable String id,
                                       HttpServletRequest request) {
@@ -113,23 +121,15 @@ public class UrlShortenerController {
     if(l == null) return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 
     if(l.getAlcanzable() == State.unknown.value) {
-      JSONObject o = new JSONObject();
-      o.put("Error", "No se sabe si la url es alcanzable o no, intente en un rato");
-      return new ResponseEntity<JSONObject>(o, HttpStatus.CONFLICT);
+      return new ResponseEntity<ErrorCode>(new ErrorCode("No se sabe si la url es alcanzable o no, intente en un rato"), HttpStatus.CONFLICT);
     } else if(l.getAlcanzable() == State.incorrect.value) {
-      JSONObject o = new JSONObject();
-      o.put("Error", "La url no es alcanzable");
-      return new ResponseEntity<JSONObject>(o, HttpStatus.BAD_REQUEST);
+      return new ResponseEntity<ErrorCode>(new ErrorCode("La url no es alcanzable"), HttpStatus.BAD_REQUEST);
     }
 
-    if(l.getSafe() == State.incorrect.value) {
-      JSONObject o = new JSONObject();
-      o.put("Error", "No seguro");
-      return new ResponseEntity<JSONObject>(o, HttpStatus.BAD_REQUEST);
-    } else if(l.getSafe() == State.unknown.value) {
-      JSONObject o = new JSONObject();
-      o.put("Error", "No se sabe si es seguro o no");
-      return new ResponseEntity<JSONObject>(o, HttpStatus.CONFLICT);
+    if(l.getSafe() == State.unknown.value) {
+      return new ResponseEntity<ErrorCode>(new ErrorCode("No se sabe si la url es segura o no, intente en un rato"), HttpStatus.CONFLICT);
+    } else if(l.getSafe() == State.incorrect.value) {
+      return new ResponseEntity<ErrorCode>(new ErrorCode("La url no es segura"), HttpStatus.BAD_REQUEST);
     }
 
     clickService.saveClick(id, extractIP(request));

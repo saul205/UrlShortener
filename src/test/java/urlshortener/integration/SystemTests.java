@@ -122,7 +122,7 @@ public class SystemTests {
     ResponseEntity<String> entity = restTemplate.getForEntity("/b61e4f44", String.class);
     assertThat(entity.getStatusCode(), is(HttpStatus.BAD_REQUEST));
     ReadContext rc = JsonPath.parse(entity.getBody());
-    assertThat(rc.read("$.Error"), is("No seguro"));
+    assertThat(rc.read("$.Error"), is("La url no es segura"));
   }
 
   @Ignore
@@ -197,6 +197,7 @@ public class SystemTests {
     assertThat(rc.read("$.count"), is(1));
   }
 
+  @Ignore
   @Test
   public void testDBHistory() throws Exception {
     

@@ -68,7 +68,6 @@ public class DataPrecalculator {
 
   private void updateProcess2(){
     
-    logger.info("UPDATEPROCESS2");
     List<ShortURL> s = shortURLService.list();
 
 		for(ShortURL shu : s){
@@ -78,8 +77,6 @@ public class DataPrecalculator {
   }
 
   private void updateProcess1(){
-
-    logger.info("UPDATEPROCESS1");
 
     Long c = shortURLService.count();
     countsService.save("shu", c, true);
