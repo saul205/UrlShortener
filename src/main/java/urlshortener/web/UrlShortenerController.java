@@ -137,22 +137,22 @@ public class UrlShortenerController {
   }
 
   @Operation(summary = "Acorta la URL introducida")
-  @ApiResponses(value = { 
-    @ApiResponse(responseCode = "201", description = "URL acortada", 
-      content = { @Content(mediaType = "application/json", 
+  @ApiResponses(value = {
+    @ApiResponse(responseCode = "201", description = "URL acortada",
+      content = { @Content(mediaType = "application/json",
         schema = @Schema(implementation = ShortURL.class)) }),
-    @ApiResponse(responseCode = "400", description = "URL introducida no válida", 
+    @ApiResponse(responseCode = "400", description = "URL introducida no válida",
       content = @Content)})
   @RequestMapping(value = "/link", method = RequestMethod.POST)
   public ResponseEntity<?> shortener(
-        @Parameter(allowEmptyValue = false, 
+        @Parameter(allowEmptyValue = false,
           schema = @Schema(example = "https://www.google.com/"),
           description = "URL a acortar") @RequestParam("url") String url,
-        @Parameter(allowEmptyValue = false, 
+        @Parameter(allowEmptyValue = false,
           schema = @Schema(example = "Coca-Cola"),
           description = "Publicidad") @RequestParam(value = "sponsor", required = false)
                                         String sponsor,
-        @Parameter(allowEmptyValue = false, 
+        @Parameter(allowEmptyValue = false,
           schema = @Schema(example = "true"),
           description = "Generar QR") @RequestParam(value = "qr", required = false)
                                         Boolean qr,
@@ -177,12 +177,22 @@ public class UrlShortenerController {
 
   }
 
+  @Operation(summary = "Generate a QR code by its id")
+  @ApiResponses(value = {
+    @ApiResponse(responseCode = "404", description = "Invalid id supplied", content = @Content),
+    @ApiResponse(responseCode = "409", description = "ID found. Not reachable or not safe", content = @Content),
+    @ApiResponse(responseCode = "400", description = "This ID has no QR associated", content = @Content),
+    @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content),
+    @ApiResponse(responseCode = "200", description = "QR code generated", content = { @Content(mediaType = "image/png") })
+  })
   @RequestMapping(value = "/qr", method = RequestMethod.GET,
                   produces = MediaType.IMAGE_PNG_VALUE)
-  public ResponseEntity<BufferedImage> generateQR(@RequestParam("hashUS") String hash){
+  public ResponseEntity<BufferedImage> generateQR( @Parameter( allowEmptyValue = false,
+      schema = @Schema(example = "qwerty123"), description = "ID to get his QR code")
+    @RequestParam("hashUS") String hash){
     ShortURL su = shortUrlService.findByKey(hash);
     if (su == null) {
-      return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+      return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
     if (su.getAlcanzable() != State.correct.value){
       return new ResponseEntity<>(HttpStatus.CONFLICT);
@@ -204,8 +214,14 @@ public class UrlShortenerController {
     }
   }
 
+  @Operation(summary = "Get stats from one url by its id")
+  @ApiResponses(value = {
+    @ApiResponse(responseCode = "404", description = "Invalid id supplied", content = @Content),
+    @ApiResponse(responseCode = "200", description = "Stats recovered", content = { @Content(mediaType = "aplication/json") })
+  })
   @RequestMapping(value = "/stid", method = RequestMethod.GET)
-  public ResponseEntity<JSONObject> getStatsURL(@RequestParam("id") String id){
+  public ResponseEntity<JSONObject> getStatsURL( @Parameter( allowEmptyValue = false,
+      schema = @Schema(example = "qwerty123"), description = "URL ID used te get their stats") @RequestParam("id") String id){
     ShortURL su = shortUrlService.findByKey(id);
     if (su != null){
       JSONObject json = new JSONObject();
@@ -230,15 +246,15 @@ public class UrlShortenerController {
   }
 
   @Operation(summary = "Acorta todas las URLs contenidas en un fichero CSV")
-  @ApiResponses(value = { 
-    @ApiResponse(responseCode = "201", description = "Creado el fichero CSV con las URLs acortadas", 
+  @ApiResponses(value = {
+    @ApiResponse(responseCode = "201", description = "Creado el fichero CSV con las URLs acortadas",
       content = { @Content(mediaType = "text/csv")}),
-    @ApiResponse(responseCode = "400", description = "Fichero CSV vacío o diferente a CSV", 
+    @ApiResponse(responseCode = "400", description = "Fichero CSV vacío o diferente a CSV",
       content = @Content)})
   @RequestBody(description = "Fichero CSV con URLs para acortar",
     content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
       schema = @Schema(nullable=false, type="string", format="binary")))
-  @RequestMapping(value = "/csv", method = RequestMethod.POST, 
+  @RequestMapping(value = "/csv", method = RequestMethod.POST,
     consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = "text/csv")
   public ResponseEntity<?> handleFileUpload(@RequestParam("file") MultipartFile file,
         HttpServletRequest request) {

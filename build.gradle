@@ -39,6 +39,7 @@ dependencies {
     compile group: 'org.apache.camel', name: 'camel-core', version: '3.6.0'
     compile group: 'org.apache.camel.springboot', name: 'camel-spring-boot-starter', version: '3.6.0'
     compile group: 'org.json', name: 'json', version: '20200518'
+    compile group: 'org.springdoc', name: 'springdoc-openapi-ui', version: '1.5.2'
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.10.0'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
