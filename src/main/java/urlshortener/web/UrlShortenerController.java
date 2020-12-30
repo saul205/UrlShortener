@@ -14,6 +14,14 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.core.io.FileSystemResource;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
+
 
 import urlshortener.domain.Click;
 import urlshortener.domain.ShortURL;
@@ -121,20 +129,35 @@ public class UrlShortenerController {
     } else if(l.getSafe() == State.unknown.value) {
       JSONObject o = new JSONObject();
       o.put("Error", "No se sabe si es seguro o no");
-      return new ResponseEntity<JSONObject>(o, HttpStatus.BAD_REQUEST);
+      return new ResponseEntity<JSONObject>(o, HttpStatus.CONFLICT);
     }
 
     clickService.saveClick(id, extractIP(request));
     return createSuccessfulRedirectToResponse(l);
   }
 
+  @Operation(summary = "Acorta la URL introducida")
+  @ApiResponses(value = { 
+    @ApiResponse(responseCode = "201", description = "URL acortada", 
+      content = { @Content(mediaType = "application/json", 
+        schema = @Schema(implementation = ShortURL.class)) }),
+    @ApiResponse(responseCode = "400", description = "URL introducida no válida", 
+      content = @Content)})
   @RequestMapping(value = "/link", method = RequestMethod.POST)
-  public ResponseEntity<ShortURL> shortener(@RequestParam("url") String url,
-                                            @RequestParam(value = "sponsor", required = false)
-                                                String sponsor,
-                                             @RequestParam(value = "qr", required = false)
-                                                Boolean qr,
-                                            HttpServletRequest request) {
+  public ResponseEntity<?> shortener(
+        @Parameter(allowEmptyValue = false, 
+          schema = @Schema(example = "https://www.google.com/"),
+          description = "URL a acortar") @RequestParam("url") String url,
+        @Parameter(allowEmptyValue = false, 
+          schema = @Schema(example = "Coca-Cola"),
+          description = "Publicidad") @RequestParam(value = "sponsor", required = false)
+                                        String sponsor,
+        @Parameter(allowEmptyValue = false, 
+          schema = @Schema(example = "true"),
+          description = "Generar QR") @RequestParam(value = "qr", required = false)
+                                        Boolean qr,
+        HttpServletRequest request) {
+
     UrlValidator urlValidator = new UrlValidator(new String[] {"http",
         "https"});
 
@@ -175,6 +198,8 @@ public class UrlShortenerController {
       BufferedImage image = QRGenerator.generateQRImage(toQR);
       return new ResponseEntity<>(image, HttpStatus.OK);
     } catch (Exception e){
+      JSONObject json = new JSONObject();
+      json.put("error", "No se ha podido obtener el QR");
       return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
@@ -204,9 +229,19 @@ public class UrlShortenerController {
     return new ResponseEntity<>(h, HttpStatus.valueOf(l.getMode()));
   }
 
-  @RequestMapping(value = "/csv", method = RequestMethod.POST, produces = "text/csv")
+  @Operation(summary = "Acorta todas las URLs contenidas en un fichero CSV")
+  @ApiResponses(value = { 
+    @ApiResponse(responseCode = "201", description = "Creado el fichero CSV con las URLs acortadas", 
+      content = { @Content(mediaType = "text/csv")}),
+    @ApiResponse(responseCode = "400", description = "Fichero CSV vacío o diferente a CSV", 
+      content = @Content)})
+  @RequestBody(description = "Fichero CSV con URLs para acortar",
+    content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
+      schema = @Schema(nullable=false, type="string", format="binary")))
+  @RequestMapping(value = "/csv", method = RequestMethod.POST, 
+    consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = "text/csv")
   public ResponseEntity<?> handleFileUpload(@RequestParam("file") MultipartFile file,
-                                  HttpServletRequest request) {
+        HttpServletRequest request) {
     ArrayList<String> lines = CSVGenerator.readCSV(file);
     if(lines == null)
       return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
