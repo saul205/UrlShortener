@@ -108,13 +108,13 @@ public class UrlShortenerController {
 
   @ApiResponses(value = { 
     @ApiResponse(responseCode = "307", description = "Redirect to the corresponding page"),
-    @ApiResponse(responseCode = "400", description = "La aplicación no es alcanzable o segura", 
+    @ApiResponse(responseCode = "400", description = "The URL isn't safe or reachable", 
     content = { @Content(mediaType = "application/json", 
     schema = @Schema(implementation = ErrorCode.class)) }), 
-    @ApiResponse(responseCode = "409", description = "La aplicación no se sabe si es alcanzable o segura", 
+    @ApiResponse(responseCode = "409", description = "The app doesn't know if the URL is safe or reachable", 
     content = { @Content(mediaType = "application/json", 
     schema = @Schema(implementation = ErrorCode.class)) }), 
-    @ApiResponse(responseCode = "404", description = "Short-url not found", content = @Content) })
+    @ApiResponse(responseCode = "404", description = "ID not found", content = @Content) })
   @RequestMapping(value = "/{id:(?!link|index|sh).*}", method = RequestMethod.GET)
   public ResponseEntity<?> redirectTo(@PathVariable String id,
                                       HttpServletRequest request) {
@@ -138,25 +138,25 @@ public class UrlShortenerController {
     return createSuccessfulRedirectToResponse(l);
   }
 
-  @Operation(summary = "Acorta la URL introducida")
+  @Operation(summary = "Shortens the introduced URL")
   @ApiResponses(value = {
-    @ApiResponse(responseCode = "201", description = "URL acortada",
+    @ApiResponse(responseCode = "201", description = "URL shortened",
       content = { @Content(mediaType = "application/json",
         schema = @Schema(implementation = ShortURL.class)) }),
-    @ApiResponse(responseCode = "400", description = "URL introducida no válida",
+    @ApiResponse(responseCode = "400", description = "Introduced URL not valid",
       content = @Content)})
   @RequestMapping(value = "/link", method = RequestMethod.POST)
   public ResponseEntity<?> shortener(
         @Parameter(allowEmptyValue = false,
           schema = @Schema(example = "https://www.google.com/"),
-          description = "URL a acortar") @RequestParam("url") String url,
+          description = "URL to shorten") @RequestParam("url") String url,
         @Parameter(allowEmptyValue = false,
           schema = @Schema(example = "Coca-Cola"),
-          description = "Publicidad") @RequestParam(value = "sponsor", required = false)
+          description = "Ads") @RequestParam(value = "sponsor", required = false)
                                         String sponsor,
         @Parameter(allowEmptyValue = false,
           schema = @Schema(example = "true"),
-          description = "Generar QR") @RequestParam(value = "qr", required = false)
+          description = "Generate QR") @RequestParam(value = "qr", required = false)
                                         Boolean qr,
         HttpServletRequest request) {
 
@@ -181,7 +181,7 @@ public class UrlShortenerController {
 
   @Operation(summary = "Generate a QR code by its id")
   @ApiResponses(value = {
-    @ApiResponse(responseCode = "404", description = "Invalid id supplied", content = @Content),
+    @ApiResponse(responseCode = "404", description = "Invalid ID supplied", content = @Content),
     @ApiResponse(responseCode = "409", description = "ID found. Not reachable or not safe", content = @Content),
     @ApiResponse(responseCode = "400", description = "This ID has no QR associated", content = @Content),
     @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content),
@@ -189,7 +189,7 @@ public class UrlShortenerController {
   })
   @RequestMapping(value = "/qr", method = RequestMethod.GET,
                   produces = MediaType.IMAGE_PNG_VALUE)
-  public ResponseEntity<BufferedImage> generateQR( @Parameter( allowEmptyValue = false,
+  public ResponseEntity<?> generateQR( @Parameter( allowEmptyValue = false,
       schema = @Schema(example = "qwerty123"), description = "ID to get his QR code")
     @RequestParam("hashUS") String hash){
     ShortURL su = shortUrlService.findByKey(hash);
@@ -208,22 +208,20 @@ public class UrlShortenerController {
     String toQR = su.getUri().toString();
     try {
       BufferedImage image = QRGenerator.generateQRImage(toQR);
-      return new ResponseEntity<>(image, HttpStatus.OK);
+      return new ResponseEntity<BufferedImage>(image, HttpStatus.OK);
     } catch (Exception e){
-      JSONObject json = new JSONObject();
-      json.put("error", "No se ha podido obtener el QR");
-      return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+      return new ResponseEntity<ErrorCode>(new ErrorCode("No se ha podido obtener el QR"), HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
   @Operation(summary = "Get stats from one url by its id")
   @ApiResponses(value = {
-    @ApiResponse(responseCode = "404", description = "Invalid id supplied", content = @Content),
+    @ApiResponse(responseCode = "404", description = "Invalid ID supplied", content = @Content),
     @ApiResponse(responseCode = "200", description = "Stats recovered", content = { @Content(mediaType = "aplication/json") })
   })
   @RequestMapping(value = "/stid", method = RequestMethod.GET)
   public ResponseEntity<JSONObject> getStatsURL( @Parameter( allowEmptyValue = false,
-      schema = @Schema(example = "qwerty123"), description = "URL ID used te get their stats") @RequestParam("id") String id){
+      schema = @Schema(example = "qwerty123"), description = "URL ID used to get their stats") @RequestParam("id") String id){
     ShortURL su = shortUrlService.findByKey(id);
     if (su != null){
       JSONObject json = new JSONObject();
@@ -247,19 +245,24 @@ public class UrlShortenerController {
     return new ResponseEntity<>(h, HttpStatus.valueOf(l.getMode()));
   }
 
-  @Operation(summary = "Acorta todas las URLs contenidas en un fichero CSV")
-  @ApiResponses(value = {
-    @ApiResponse(responseCode = "201", description = "Creado el fichero CSV con las URLs acortadas",
+  @Operation(summary = "Shortens all the URLs contained in a CSV file")
+  @ApiResponses(value = { 
+    @ApiResponse(responseCode = "201", description = "Created the CSV file with all the URLs shortened", 
       content = { @Content(mediaType = "text/csv")}),
-    @ApiResponse(responseCode = "400", description = "Fichero CSV vacío o diferente a CSV",
+    @ApiResponse(responseCode = "400", description = "Empty CSV file", 
+      content = @Content),
+    @ApiResponse(responseCode = "415", description = "File with extension different than CSV or null", 
       content = @Content)})
-  @RequestBody(description = "Fichero CSV con URLs para acortar",
-    content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
-      schema = @Schema(nullable=false, type="string", format="binary")))
-  @RequestMapping(value = "/csv", method = RequestMethod.POST,
+  @RequestBody(description = "CSV file with the URLs to shorten",
+    content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE))
+  @RequestMapping(value = "/csv", method = RequestMethod.POST, 
     consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = "text/csv")
   public ResponseEntity<?> handleFileUpload(@RequestParam("file") MultipartFile file,
-        HttpServletRequest request) {
+                                            HttpServletRequest request) {
+    if(!file.getContentType().equals("text/csv")) {
+      return new ResponseEntity<>(HttpStatus.UNSUPPORTED_MEDIA_TYPE);
+    }
+    
     ArrayList<String> lines = CSVGenerator.readCSV(file);
     if(lines == null)
       return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
