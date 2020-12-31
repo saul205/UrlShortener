@@ -69,6 +69,7 @@ public class CSVGenerator {
             }
             pair.add(sh);
         } catch(Exception e) {
+            pair.add(new ArrayList<ShortURL>());
             e.printStackTrace();
         }
         pair.add(f);

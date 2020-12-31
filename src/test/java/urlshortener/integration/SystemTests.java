@@ -15,6 +15,7 @@ import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.ReadContext;
 import java.util.HashMap;
 import java.util.List;
+import java.io.FileWriter;
 import java.net.URI;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -29,6 +30,18 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+
+import org.springframework.http.MediaType;
+import org.springframework.web.multipart.MultipartFile;
+
+import urlshortener.domain.ErrorCode;
+
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpEntity;
+import org.springframework.core.io.FileSystemResource;
+import java.io.File;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -125,6 +138,70 @@ public class SystemTests {
     assertThat(rc.read("$.Error"), is("La url no es segura"));
   }
 
+  @Test
+  public void testCSVEmpty() throws Exception {
+    ResponseEntity<String> entity = postCSV("");
+    assertThat(entity.getStatusCode(), is(HttpStatus.BAD_REQUEST));
+    ReadContext rc = JsonPath.parse(entity.getBody());
+    assertThat(rc.read("$.Error"), is("Fichero vacío")); 
+
+    File file = new File("file.csv");
+    file.delete(); 
+  }
+
+  @Test
+  public void testCSVNull() throws Exception {
+    ResponseEntity<String> entity = restTemplate.postForEntity("/csv", null, String.class);
+    assertThat(entity.getStatusCode(), is(HttpStatus.UNSUPPORTED_MEDIA_TYPE));
+  }
+
+  @Test
+  public void testCSVCorrect() throws Exception {
+    ResponseEntity<String> entity = postCSV("http://google.com/\nhttp://example.com/\n");
+    assertThat(entity.getStatusCode(), is(HttpStatus.CREATED));
+    assertThat(entity.getHeaders().getLocation(), is(new URI("http://localhost:" + this.port + "/5e399431")));
+    assertThat(entity.getHeaders().getContentType(), is(new MediaType("text", "csv")));
+    assertThat(entity.getBody(), is("http://google.com/,http://localhost:" + this.port + "/5e399431,\n" + 
+                                    "http://example.com/,http://localhost:" + this.port + "/f684a3c4,\n"));
+
+    File file = new File("file.csv");
+    file.delete(); 
+  }
+
+  @Test
+  public void testCSVURLNotValid() throws Exception {
+    ResponseEntity<String> entity = postCSV("notvalid\nhttp://example.com/\n");
+    assertThat(entity.getStatusCode(), is(HttpStatus.CREATED));
+    assertThat(entity.getHeaders().getLocation(), is(new URI("http://localhost:" + this.port + "/f684a3c4")));
+    assertThat(entity.getHeaders().getContentType(), is(new MediaType("text", "csv")));
+    assertThat(entity.getBody(), is("notvalid,,Debe ser una URI http o https válida\n" + 
+                                    "http://example.com/,http://localhost:" + this.port + "/f684a3c4,\n"));
+
+    File file = new File("file.csv");
+    file.delete(); 
+  }
+
+  @Test
+  public void testCSVAllURLNotValid() throws Exception {
+    ResponseEntity<String> entity = postCSV("notvalid\nnotvalid2\n");
+    logger.info("--------------------------------- " + entity.getBody());
+    assertThat(entity.getStatusCode(), is(HttpStatus.BAD_REQUEST));
+    ReadContext rc = JsonPath.parse(entity.getBody());
+    assertThat(rc.read("$.Error"), is("Todas las URL son inválidas")); 
+
+    File file = new File("file.csv");
+    file.delete(); 
+  }
+
+  @Test
+  public void testCSVDifferentType() throws Exception {
+    ResponseEntity<String> entity = postCSV("http://google.com/\nhttp://example.com/\n", "file.txt");
+    assertThat(entity.getStatusCode(), is(HttpStatus.UNSUPPORTED_MEDIA_TYPE));
+
+    File file = new File("file.txt");
+    file.delete(); 
+  }
+
   @Ignore
   @Test
   public void testDB() throws Exception {
@@ -219,6 +296,26 @@ public class SystemTests {
     MultiValueMap<String, Object> parts = new LinkedMultiValueMap<>();
     parts.add("url", url);
     return restTemplate.postForEntity("/link", parts, String.class);
+  }
+
+  private ResponseEntity<String> postCSV(String url) throws Exception {
+    return postCSV(url, "file.csv");
+  }
+
+  private ResponseEntity<String> postCSV(String url, String name) throws Exception {
+    HttpHeaders headers = new HttpHeaders();
+    headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+
+    MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+    File obj = new File(name);
+    FileWriter mw = new FileWriter(obj);
+    mw.write(url);
+    mw.close();
+    body.add("file", new FileSystemResource(obj));
+
+    HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
+
+    return restTemplate.postForEntity("/csv", requestEntity, String.class);
   }
 
 }

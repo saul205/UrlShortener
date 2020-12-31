@@ -184,7 +184,7 @@ public class UrlShortenerController {
     @ApiResponse(responseCode = "404", description = "Invalid ID supplied", content = @Content),
     @ApiResponse(responseCode = "409", description = "ID found. Not reachable or not safe", content = @Content),
     @ApiResponse(responseCode = "400", description = "This ID has no QR associated", content = @Content),
-    @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content),
+    @ApiResponse(responseCode = "500", description = "Internal server error", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorCode.class))}),
     @ApiResponse(responseCode = "200", description = "QR code generated", content = { @Content(mediaType = "image/png") })
   })
   @RequestMapping(value = "/qr", method = RequestMethod.GET,
@@ -249,29 +249,40 @@ public class UrlShortenerController {
   @ApiResponses(value = { 
     @ApiResponse(responseCode = "201", description = "Created the CSV file with all the URLs shortened", 
       content = { @Content(mediaType = "text/csv")}),
-    @ApiResponse(responseCode = "400", description = "Empty CSV file", 
-      content = @Content),
+    @ApiResponse(responseCode = "400", description = "Empty CSV file or all URLs invalid", 
+      content = { @Content(mediaType = "application/json",
+      schema = @Schema(implementation = ErrorCode.class))}),
     @ApiResponse(responseCode = "415", description = "File with extension different than CSV or null", 
-      content = @Content)})
+      content = { @Content(mediaType = "application/json",
+      schema = @Schema(implementation = ErrorCode.class))})})
   @RequestBody(description = "CSV file with the URLs to shorten",
     content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE))
   @RequestMapping(value = "/csv", method = RequestMethod.POST, 
     consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = "text/csv")
   public ResponseEntity<?> handleFileUpload(@RequestParam("file") MultipartFile file,
                                             HttpServletRequest request) {
-    if(!file.getContentType().equals("text/csv")) {
+    if(file == null || !file.getContentType().equals("text/csv")) {
       return new ResponseEntity<>(HttpStatus.UNSUPPORTED_MEDIA_TYPE);
     }
     
     ArrayList<String> lines = CSVGenerator.readCSV(file);
-    if(lines == null)
-      return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+
+    if(lines.size() == 0) {
+      ErrorCode er = new ErrorCode("Fichero vacío");
+      HttpHeaders h = new HttpHeaders();
+      h.setContentType(MediaType.parseMediaType("application/json"));
+      return new ResponseEntity<ErrorCode>(er, h, HttpStatus.BAD_REQUEST);
+    }
 
 		ArrayList<Object> csv = CSVGenerator.writeCSV(lines, request.getRemoteAddr(), shortUrlService);
     ArrayList<ShortURL> su = (ArrayList<ShortURL>)csv.get(0);
     int size = su.size();
-    if(size == 0)
-      return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+    if(size == 0) { 
+      ErrorCode er = new ErrorCode("Todas las URL son inválidas");
+      HttpHeaders h = new HttpHeaders();
+      h.setContentType(MediaType.parseMediaType("application/json"));
+      return new ResponseEntity<ErrorCode>(er, h, HttpStatus.BAD_REQUEST);
+    }
 
     executor.submit(() -> {
 
