@@ -1,3 +1,2 @@
-https://github.com/,http://localhost:8080/9ad1e18c
-https://testsafebrowsing.appspot.com/,http://localhost:8080/4e117d75
-https://testsafebrowsing.appspot.com/s/malware.html,http://localhost:8080/b61e4f44
+notvalid,,Debe ser una URI http o https válida
+notvalid2,,Debe ser una URI http o https válida
