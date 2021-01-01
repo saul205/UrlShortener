@@ -202,7 +202,7 @@ public class SystemTests {
     assertThat(entity.getStatusCode(), is(HttpStatus.CREATED));
     assertThat(entity.getHeaders().getLocation(), is(new URI("http://localhost:" + this.port + "/f684a3c4")));
     assertThat(entity.getHeaders().getContentType(), is(new MediaType("text", "csv")));
-    assertThat(entity.getBody(), is("notvalid,,Debe ser una URI http o https válida\n" +
+    assertThat(entity.getBody(), is("notvalid,,Debe ser una URI http o https valida\n" +
                                     "http://example.com/,http://localhost:" + this.port + "/f684a3c4,\n"));
 
     File file = new File("file.csv");

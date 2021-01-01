@@ -27,7 +27,7 @@ public class CSVGenerator {
         if(checkCSV(line)) {
             return line;
         } else {
-            return line + ",,Debe ser una URI http o https válida";
+            return line + ",,Debe ser una URI http o https valida";
         }
     }
 
