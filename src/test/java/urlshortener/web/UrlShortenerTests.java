@@ -137,6 +137,20 @@ public class UrlShortenerTests {
         .andExpect(status().isBadRequest());
   }
 
+  @Test
+  public void thatShortenerCreatesARedirectWithQR() throws Exception {
+    configureSave(null);
+    
+    mockMvc.perform(
+        post("/link").param("url", "http://example.com/").param("qr", "true")).andDo(print())
+        .andExpect(redirectedUrl("http://localhost/f684a3c4"))
+        .andExpect(status().isCreated())
+        .andExpect(jsonPath("$.hash", is("f684a3c4")))
+        .andExpect(jsonPath("$.uri", is("http://localhost/f684a3c4")))
+        .andExpect(jsonPath("$.target", is("http://example.com/")))
+        .andExpect(jsonPath("$.qr", is("http://localhost/qr?hashUS=f684a3c4")));
+  }
+
   private void configureSave(String sponsor) {
     when(shortUrlService.save(any(), any(), any(), any()))
         .then((Answer<ShortURL>) invocation -> new ShortURL(
@@ -148,7 +162,7 @@ public class UrlShortenerTests {
             null,
             0,
             -1,
-            null,
+            "http://localhost/qr?hashUS=f684a3c4",
             null,
             null));
   }

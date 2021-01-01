@@ -10,7 +10,6 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 
 import org.junit.Ignore;
 
-
 import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.ReadContext;
 import java.util.HashMap;
@@ -29,6 +28,14 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+
+import java.io.ByteArrayInputStream;
+import javax.imageio.ImageIO;
+import com.google.zxing.Result;
+import com.google.zxing.BinaryBitmap;
+import com.google.zxing.MultiFormatReader;
+import com.google.zxing.common.HybridBinarizer;
+import com.google.zxing.client.j2se.BufferedImageLuminanceSource;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -96,8 +103,9 @@ public class SystemTests {
     postLink("http://example.com/");
 
     ResponseEntity<String> entity = restTemplate.getForEntity("/f684a3c4", String.class);
-    ReadContext rc = JsonPath.parse(entity.getBody());
     assertThat(entity.getStatusCode(), is(HttpStatus.CONFLICT));
+
+    ReadContext rc = JsonPath.parse(entity.getBody());
     assertThat(rc.read("$.Error"), is("No se sabe si la url es alcanzable o no, intente en un rato"));
   }
 
@@ -123,6 +131,29 @@ public class SystemTests {
     assertThat(entity.getStatusCode(), is(HttpStatus.BAD_REQUEST));
     ReadContext rc = JsonPath.parse(entity.getBody());
     assertThat(rc.read("$.Error"), is("La url no es segura"));
+  }
+
+  @Test
+  public void testQrOK() throws Exception {
+    ResponseEntity<String> entity = postLinkBool("https://www.google.com/", new Boolean(true));
+
+    assertThat(entity.getStatusCode(), is(HttpStatus.CREATED));
+    ReadContext rc = JsonPath.parse(entity.getBody());
+    assertThat(rc.read("$.qr"), is("http://localhost:" + this.port + "/qr?hashUS=" + rc.read("$.hash")));
+
+    Thread.sleep(6000);
+
+    ResponseEntity<byte[]> entity2 = getQR(rc.read("$.hash"));
+    assertThat(entity2.getStatusCode(), is(HttpStatus.OK));
+
+    BinaryBitmap binaryBitmap = new BinaryBitmap( new HybridBinarizer(
+        new BufferedImageLuminanceSource(
+            ImageIO.read(
+              new ByteArrayInputStream(entity2.getBody())
+            ))));
+    Result result = new MultiFormatReader().decode(binaryBitmap);
+    
+    assertThat(rc.read("$.uri"), is(result.getText()));
   }
 
   @Ignore
@@ -216,9 +247,18 @@ public class SystemTests {
   }
 
   private ResponseEntity<String> postLink(String url) {
+    return postLinkBool(url, new Boolean(false));
+  }
+
+  private ResponseEntity<String> postLinkBool(String url, Boolean bool) {
     MultiValueMap<String, Object> parts = new LinkedMultiValueMap<>();
     parts.add("url", url);
+    parts.add("qr", bool.toString());
     return restTemplate.postForEntity("/link", parts, String.class);
+  }
+
+  private ResponseEntity<byte[]> getQR(String hash) {
+    return restTemplate.getForEntity("/qr?hashUS=" + hash, byte[].class);
   }
 
 }
