@@ -144,6 +144,30 @@ public class SystemTests {
   }
 
   @Test
+  public void testQrNotReachableSafe() throws Exception{
+    postLink("https://testsafebrowsing.appspot.com/s/malware.html");
+    ResponseEntity<byte[]> entity = getQR("b61e4f44");
+    assertThat(entity.getStatusCode(), is(HttpStatus.CONFLICT));
+  }
+
+  @Test
+  public void testQrIDnotFound() throws Exception{
+    ResponseEntity<byte[]> entity = getQR("qwerty");
+    assertThat(entity.getStatusCode(), is(HttpStatus.NOT_FOUND));
+  }
+
+  @Test
+  public void testNotQr() throws Exception{
+    ResponseEntity<String> entity = postLinkBool("https://www.google.es/", new Boolean(false));
+    ReadContext rc = JsonPath.parse(entity.getBody());
+
+    Thread.sleep(6000);
+
+    ResponseEntity<byte[]> entity2 = getQR(rc.read("$.hash"));
+    assertThat(entity2.getStatusCode(), is(HttpStatus.BAD_REQUEST));
+  }
+
+  @Test
   public void testQrOK() throws Exception {
     ResponseEntity<String> entity = postLinkBool("https://www.google.com/", new Boolean(true));
 
@@ -156,6 +180,7 @@ public class SystemTests {
     ResponseEntity<byte[]> entity2 = getQR(rc.read("$.hash"));
     assertThat(entity2.getStatusCode(), is(HttpStatus.OK));
 
+    Thread.sleep(2000);
     BinaryBitmap binaryBitmap = new BinaryBitmap( new HybridBinarizer(
         new BufferedImageLuminanceSource(
             ImageIO.read(
