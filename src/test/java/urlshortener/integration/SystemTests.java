@@ -255,107 +255,6 @@ public class SystemTests {
     file.delete();
   }
 
-  @Ignore
-  @Test
-  public void testDB() throws Exception {
-    postLink("http://example.com/");
-
-    ResponseEntity<String> entity = restTemplate.getForEntity("/actuator/data", String.class);
-    assertThat(entity.getStatusCode(), is(HttpStatus.OK));
-    assertThat(entity.getHeaders().getContentType(), is(new MediaType("application", "json")));
-    ReadContext rc = JsonPath.parse(entity.getBody());
-    assertThat(rc.read("$.clicks"), is(0));
-    assertThat(rc.read("$.urls"), is(2));
-    assertThat(rc.read("$.top"), is(new HashMap()));
-  }
-
-  @Ignore
-  @Test
-  public void testDBWithRedirects() throws Exception {
-
-    postLink("http://example.com/");
-    postLink("http://google.com/");
-
-    Thread.sleep(2000);
-
-    ResponseEntity<String> entity1 = restTemplate.getForEntity("/f684a3c4", String.class);
-    assertThat(entity1.getStatusCode(), is(HttpStatus.TEMPORARY_REDIRECT));
-    assertThat(entity1.getHeaders().getLocation(), is(new URI("http://example.com/")));
-
-    entity1 = restTemplate.getForEntity("/5e399431", String.class);
-    assertThat(entity1.getStatusCode(), is(HttpStatus.TEMPORARY_REDIRECT));
-    assertThat(entity1.getHeaders().getLocation(), is(new URI("http://google.com/")));
-
-    entity1 = restTemplate.getForEntity("/5e399431", String.class);
-    assertThat(entity1.getStatusCode(), is(HttpStatus.TEMPORARY_REDIRECT));
-    assertThat(entity1.getHeaders().getLocation(), is(new URI("http://google.com/")));
-
-    ResponseEntity<String> entity = restTemplate.getForEntity("/actuator/data", String.class);
-    assertThat(entity.getStatusCode(), is(HttpStatus.OK));
-    assertThat(entity.getHeaders().getContentType(), is(new MediaType("application", "json")));
-    ReadContext rc = JsonPath.parse(entity.getBody());
-    assertThat(rc.read("$.clicks"), is(4));
-    assertThat(rc.read("$.urls"), is(4));
-    HashMap top = new HashMap();
-    top.put("http://example.com/", 1);
-    HashMap top2 = new HashMap();
-    top2.put("http://google.com/", 3);
-    assertThat(rc.read("$.top.0"), is(top2));
-    assertThat(rc.read("$.top.1"), is(top));
-  }
-
-  @Ignore
-  @Test
-  public void testDBSearch() throws Exception {
-
-    postLink("http://google.com/");
-
-    Thread.sleep(2000);
-
-    ResponseEntity<String> entity1 = restTemplate.getForEntity("/5e399431", String.class);
-    assertThat(entity1.getStatusCode(), is(HttpStatus.TEMPORARY_REDIRECT));
-    assertThat(entity1.getHeaders().getLocation(), is(new URI("http://google.com/")));
-
-    MultiValueMap<String, Object> parts = new LinkedMultiValueMap<>();
-    parts.add("target", "http://google.com/");
-    ResponseEntity<String> entity = restTemplate.postForEntity("/actuator/data", parts, String.class);
-    assertThat(entity.getStatusCode(), is(HttpStatus.OK));
-    assertThat(entity.getHeaders().getContentType(), is(new MediaType("application", "json")));
-    ReadContext rc = JsonPath.parse(entity.getBody());
-    assertThat(rc.read("$.hash"), is("5e399431"));
-    assertThat(rc.read("$.target"), is("http://google.com/"));
-    assertThat(rc.read("$.count"), is(1));
-  }
-
-  @Ignore
-  @Test
-  public void testDBHistory() throws Exception {
-
-    postLink("http://google.com/");
-
-    ResponseEntity<String> entity = restTemplate.getForEntity("/history", String.class);
-    assertThat(entity.getStatusCode(), is(HttpStatus.OK));
-    assertThat(entity.getHeaders().getContentType(), is(new MediaType("application", "json")));
-    ReadContext rc = JsonPath.parse(entity.getBody());
-    List h = rc.read("$.0", List.class);
-    logger.info(h.toString());
-    assert(h.contains("http://google.com/"));
-
-    h = rc.read("$.1", List.class);
-    assert(h.contains("http://example.com/"));
-  }
-
-  private ResponseEntity<String> postLink(String url) {
-    return postLinkBool(url, new Boolean(false));
-  }
-
-  private ResponseEntity<String> postLinkBool(String url, Boolean bool) {
-    MultiValueMap<String, Object> parts = new LinkedMultiValueMap<>();
-    parts.add("url", url);
-    parts.add("qr", bool.toString());
-    return restTemplate.postForEntity("/link", parts, String.class);
-  }
-
   private ResponseEntity<byte[]> getQR(String hash) {
     return restTemplate.getForEntity("/qr?hashUS=" + hash, byte[].class);
   }
@@ -378,6 +277,17 @@ public class SystemTests {
     HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
 
     return restTemplate.postForEntity("/csv", requestEntity, String.class);
+  }
+
+  private ResponseEntity<String> postLink(String url) {
+    return postLinkBool(url, new Boolean(false));
+  }
+
+  private ResponseEntity<String> postLinkBool(String url, Boolean bool) {
+    MultiValueMap<String, Object> parts = new LinkedMultiValueMap<>();
+    parts.add("url", url);
+    parts.add("qr", bool.toString());
+    return restTemplate.postForEntity("/link", parts, String.class);
   }
 
 }

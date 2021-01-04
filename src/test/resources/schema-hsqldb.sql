@@ -11,7 +11,7 @@ DROP TABLE MOSTVISITED IF EXISTS;
 CREATE TABLE SHORTURL
 (
     HASH    VARCHAR(30) PRIMARY KEY, -- Key
-    TARGET  VARCHAR(1024),           -- Original URL
+    TARGET  VARCHAR(1024),           -- Original URLcc
     SPONSOR VARCHAR(1024),           -- Sponsor URL
     CREATED TIMESTAMP,               -- Creation date
     OWNER   VARCHAR(255),            -- User id
@@ -23,6 +23,7 @@ CREATE TABLE SHORTURL
     COUNTRY VARCHAR(50),             -- Country
     URI     VARCHAR(1024)
 );
+
 -- Click
 
 CREATE TABLE CLICK
