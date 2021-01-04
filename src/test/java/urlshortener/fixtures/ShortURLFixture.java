@@ -39,6 +39,11 @@ public class ShortURLFixture {
         null, null, null);
   }
 
+  public static ShortURL urlNotSafe() {
+    return new ShortURL("4", null, "", "sponsor", null, null, null, -1,
+        null, null, null, 1);
+  }
+
   public static ShortURL someUrl() {
     return new ShortURL("someKey", "http://example.com/", "", null, null,
         null, 307, 1, null, null, null, 1);

@@ -181,9 +181,9 @@ public class UrlShortenerController {
 
   @Operation(summary = "Generate a QR code by its id")
   @ApiResponses(value = {
-    @ApiResponse(responseCode = "404", description = "Invalid ID supplied", content = @Content),
-    @ApiResponse(responseCode = "409", description = "ID found. Not reachable or not safe", content = @Content),
-    @ApiResponse(responseCode = "400", description = "This ID has no QR associated", content = @Content),
+    @ApiResponse(responseCode = "404", description = "Invalid ID supplied", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorCode.class))}),
+    @ApiResponse(responseCode = "409", description = "ID found. Not reachable or not safe", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorCode.class))}),
+    @ApiResponse(responseCode = "400", description = "This ID has no QR associated", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorCode.class))}),
     @ApiResponse(responseCode = "500", description = "Internal server error", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorCode.class))}),
     @ApiResponse(responseCode = "200", description = "QR code generated", content = { @Content(mediaType = "image/png") })
   })
@@ -193,24 +193,26 @@ public class UrlShortenerController {
       schema = @Schema(example = "qwerty123"), description = "ID to get his QR code")
     @RequestParam("hashUS") String hash){
     ShortURL su = shortUrlService.findByKey(hash);
+    HttpHeaders h = new HttpHeaders();
+    h.setContentType(MediaType.parseMediaType("application/json"));
     if (su == null) {
-      return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+      return new ResponseEntity<>(new ErrorCode("Hash no encontrado"), h, HttpStatus.NOT_FOUND);
     }
     if (su.getAlcanzable() != State.correct.value){
-      return new ResponseEntity<>(HttpStatus.CONFLICT);
+      return new ResponseEntity<>(new ErrorCode("URL no alcanzable"), h, HttpStatus.CONFLICT);
     }
     if (su.getSafe() != State.correct.value){
-      return new ResponseEntity<>(HttpStatus.CONFLICT);
+      return new ResponseEntity<>(new ErrorCode("URL no segura"), h, HttpStatus.CONFLICT);
     }
     if (su.getQR() == null) {
-      return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+      return new ResponseEntity<>(new ErrorCode("URL no indicada para generar QR"), h, HttpStatus.BAD_REQUEST);
     }
     String toQR = su.getUri().toString();
     try {
       BufferedImage image = QRGenerator.generateQRImage(toQR);
       return new ResponseEntity<BufferedImage>(image, HttpStatus.OK);
     } catch (Exception e){
-      return new ResponseEntity<ErrorCode>(new ErrorCode("No se ha podido obtener el QR"), HttpStatus.INTERNAL_SERVER_ERROR);
+      return new ResponseEntity<ErrorCode>(new ErrorCode("No se ha podido obtener el QR"), h, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 

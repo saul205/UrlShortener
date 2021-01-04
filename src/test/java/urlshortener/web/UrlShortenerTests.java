@@ -14,6 +14,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static urlshortener.fixtures.ShortURLFixture.someUrl;
 import static urlshortener.fixtures.ShortURLFixture.someUrlNotAvailable;
 import static urlshortener.fixtures.ShortURLFixture.someUrlNotYetAvailable;
+import static urlshortener.fixtures.ShortURLFixture.urlNotSafe;
 
 
 import java.net.URI;
@@ -80,6 +81,16 @@ public class UrlShortenerTests {
     mockMvc.perform(get("/{id}", "someKey")).andDo(print())
         .andExpect(status().isBadRequest())
         .andExpect(jsonPath("$.Error", is("La url no es alcanzable")));
+  }
+
+  @Test
+  public void thatRedirectToReturnsTemporaryRedirectIfKeyExistsAndNotSafe()
+      throws Exception {
+    when(shortUrlService.findByKey("someKey")).thenReturn(urlNotSafe());
+
+    mockMvc.perform(get("/{id}", "someKey")).andDo(print())
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.Error", is("La url no es segura")));
   }
 
   @Test
