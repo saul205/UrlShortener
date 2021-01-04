@@ -28,6 +28,7 @@ public class CSVService {
     String sol = "";
     String lines[] = line.split("\n");
     int len = lines.length - 1;
+    if(len == 0) return "";
     ArrayList<ShortURL> su = new ArrayList<>();
     for(int i = 0; i < len; ++i) {
       String res = CSVGenerator.readLine(lines[i]);
@@ -37,6 +38,8 @@ public class CSVService {
       } 
       sol += res + "\n";
     }
+
+    if(su.isEmpty()) return "INVALID";
 
     executor.submit(() -> {
 

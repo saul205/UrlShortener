@@ -196,7 +196,7 @@ public class SystemTests {
     ResponseEntity<String> entity = postCSV("");
     assertThat(entity.getStatusCode(), is(HttpStatus.BAD_REQUEST));
     ReadContext rc = JsonPath.parse(entity.getBody());
-    assertThat(rc.read("$.Error"), is("Fichero vacío"));
+    assertThat(rc.read("$.Error"), is("Fichero vacio"));
 
     File file = new File("file.csv");
     file.delete();
@@ -240,7 +240,7 @@ public class SystemTests {
     logger.info("--------------------------------- " + entity.getBody());
     assertThat(entity.getStatusCode(), is(HttpStatus.BAD_REQUEST));
     ReadContext rc = JsonPath.parse(entity.getBody());
-    assertThat(rc.read("$.Error"), is("Todas las URL son inválidas"));
+    assertThat(rc.read("$.Error"), is("Fichero con todas las URLs invalidas"));
 
     File file = new File("file.csv");
     file.delete();
