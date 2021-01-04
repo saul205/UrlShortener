@@ -255,7 +255,7 @@ public class UrlShortenerController {
     @ApiResponse(responseCode = "415", description = "File with extension different than CSV or null", 
       content = { @Content(mediaType = "application/json",
       schema = @Schema(implementation = ErrorCode.class))})})
-  @RequestBody(description = "CSV file with the URLs to shorten",
+  @RequestBody(description = "CSV file with the URLs to shorten. In each line, put one URL",
     content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE))
   @RequestMapping(value = "/csv", method = RequestMethod.POST, 
     consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = "text/csv")
@@ -268,7 +268,7 @@ public class UrlShortenerController {
     ArrayList<String> lines = CSVGenerator.readCSV(file);
 
     if(lines.size() == 0) {
-      ErrorCode er = new ErrorCode("Fichero vacío");
+      ErrorCode er = new ErrorCode("Fichero vacio");
       HttpHeaders h = new HttpHeaders();
       h.setContentType(MediaType.parseMediaType("application/json"));
       return new ResponseEntity<ErrorCode>(er, h, HttpStatus.BAD_REQUEST);
@@ -278,7 +278,7 @@ public class UrlShortenerController {
     ArrayList<ShortURL> su = (ArrayList<ShortURL>)csv.get(0);
     int size = su.size();
     if(size == 0) { 
-      ErrorCode er = new ErrorCode("Todas las URL son inválidas");
+      ErrorCode er = new ErrorCode("Fichero con todas las URLs invalidas");
       HttpHeaders h = new HttpHeaders();
       h.setContentType(MediaType.parseMediaType("application/json"));
       return new ResponseEntity<ErrorCode>(er, h, HttpStatus.BAD_REQUEST);

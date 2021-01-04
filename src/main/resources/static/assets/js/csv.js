@@ -14,30 +14,8 @@ $(document).ready( function(){
     ip = data.match(ipRegex)[0];
   });
   $("#choosefile").click( function(event){
-      //var form = new FormData()
-      if(file) connect()
-      original()
-      //form.append('file', file)
-      //event.preventDefault()
-      /*$.ajax({
-          type: "POST",
-          url: "/csv",
-          data: form,
-          contentType: false,
-          cache: false,
-          processData: false,
-          success: function (msg) { 
-            download(file.name.substring(0, file.name.length - 4) + "-short.csv", msg)
-            //csvData = 'data:application/csv;charset=utf-8,' + encodeURIComponent(msg);
-            //var link = document.createElement("a");
-            //link.setAttribute("href", csvData);
-            //link.setAttribute("download", file.name.substring(0, file.name.length - 4) + "-short.csv");
-            //document.body.appendChild(link);
-            //link.click();
-            //document.body.removeChild(link)
-          },
-          error: function (msg) { console.log("SEND CSV FAIL"); }
-      });*/
+    if(file) connect()
+    original()
   });
 });
 
@@ -65,19 +43,6 @@ function handleClick() {
   }
 }
 
-/*function changeType(e) {
-  console.log("CHANGETYPE")
-  var dt = event.dataTransfer
-  var files = dt.files
-  if(files[0].name.endsWith(".csv")) {
-    document.getElementById("dropfile").innerHTML = files[0].name
-    file = files[0]
-    change()
-  } else {
-    alert("Tipo de archivo no permitido (diferente a .csv)")
-  }
-}*/
-
 function change() {
   document.getElementById("orfile").innerHTML = ""
   document.getElementById("choosefile").innerHTML = "Upload file"
@@ -101,14 +66,20 @@ function connect() {
     if(data.data == "Connected") {
       sendData()
     } else {
-      download(file.name.substring(0, file.name.length - 4) + "-short.csv", data.data)
+      if(data.data == "") {
+        alert("Fichero vacío")
+      } else if(data.data == "INVALID") {
+        alert("Fichero con todas las URLs inválidas")
+      } else {
+        download(file.name.substring(0, file.name.length - 4) + "-short.csv", data.data)
+      }
       disconnect()
     }
   }
 }
 
 function disconnect() {
-	if (ws != null) {
+	if(ws != null) {
 		ws.close()
 	}
 }
