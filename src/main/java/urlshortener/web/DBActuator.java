@@ -19,7 +19,19 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONArray;
 
 import org.springframework.stereotype.Component;
-import org.springframework.boot.actuate.endpoint.annotation.*;
+import org.springframework.boot.actuate.endpoint.web.annotation.RestControllerEndpoint;
+
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 
 import java.util.List;
 import java.util.Timer;
@@ -39,9 +51,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 
 @Component
-@Endpoint(id = "data")
+@RestControllerEndpoint(id = "data")
 public class DBActuator{
-
 	
   private static final Logger logger = LoggerFactory.getLogger(UrlShortenerController.class);
 
@@ -97,63 +108,68 @@ public class DBActuator{
 	  executor.scheduleAtFixedRate(task, 0L, 10000L, TimeUnit.MILLISECONDS);
   }
 	  
-  @ReadOperation
-  public ResponseEntity<JSONObject> getData(){
+  @Operation(summary = "Returns the systems data to the user")
+  @ApiResponses(value = {
+    @ApiResponse(responseCode = "200", description = "Url shortened, Url redirected, Top urls redirected and last 10 url shortened",
+      content = { @Content(mediaType = "application/json",
+        schema = @Schema(implementation = JsonData.class)) }) })
+  @GetMapping(value = "")
+  public ResponseEntity<JsonData> getData(){
 
 		List<Counts> counts = mostVisitedService.find();
-		JSONObject mainObj = new JSONObject();
+		Long clicks = 0L, urls = 0L;
 
 		Counts c = countsService.findByHash("cl");
-		if(c == null){
-			mainObj.put("clicks", 0);
-		}else{
-			mainObj.put("clicks", c.getCount());
+		if(c != null){
+			clicks = c.getCount();
 		}
 
 		c = countsService.findByHash("shu");
-		if(c == null){
-			mainObj.put("urls", 0);
-		}else{
-			mainObj.put("urls", c.getCount());
+		if(c != null){
+			urls = c.getCount();
 		}
 
-		mainObj.put("historial", historyService.find(10));
-		mainObj.put("top", counts);
+		JsonData data = new JsonData(clicks, urls, counts, historyService.find(10));
 		updateProcess();
 		
-		return new ResponseEntity<>(mainObj, HttpStatus.OK);
+		return new ResponseEntity<>(data, HttpStatus.OK);
   }
 
   private void updateProcess(){
 	  dataPrecalculator.sender();
   }
 
-	@WriteOperation
- 	public ResponseEntity<JSONObject> getTargetCount(String target){
+	@Operation(summary = "Returns specific data for a given target url")
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "Number of times the url got redirected", 
+			content = { @Content(mediaType = "application/json",
+			schema = @Schema(implementation=JsonSearch.class)) }),
+		@ApiResponse(responseCode = "400", description = "Introduced URL not valid", content = { @Content }) })
+    @PostMapping(value = "")
+ 	public ResponseEntity<JsonSearch> getTargetCount(@org.springframework.web.bind.annotation.RequestBody JsonTarget jtarget){
 
+		String target = jtarget.getTarget();
 		logger.info("TARGET: " + target);
 
 		if(target == "") return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 
 		List<Counts> urls = countsService.findByTarget(target);
-		JSONObject json = new JSONObject();
 
 		if(urls.size() == 0){
-			json.put("target", target);	
-			json.put("count", 0);
+			JsonSearch search = new JsonSearch(0L, target);
 
 			updateProcess();
-			return new ResponseEntity<>(json, HttpStatus.OK);
+			return new ResponseEntity<>(search, HttpStatus.OK);
 		}
 
-		String clkText = "";
+		JsonSearch search = new JsonSearch(0L, null);
+
 		for(Counts u : urls){
-			json.put("target", u.getTarget());
-			json.put("hash", u.getHash());
-			json.put("count", u.getCount());
+
+			search = new JsonSearch(u.getCount(), u.getHash(), u.getTarget());
 		}
 
 		updateProcess();
-		return new ResponseEntity<>(json, HttpStatus.OK);
+		return new ResponseEntity<>(search, HttpStatus.OK);
 	}
 }
