@@ -13,14 +13,9 @@ import java.util.concurrent.ExecutionException;
 import java.io.IOException;
 import java.nio.channels.InterruptedByTimeoutException;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 @ServerEndpoint(value = "/csvws")
 @Controller
 public class WebSocket {
-
-  private static final Logger logger = LoggerFactory.getLogger(WebSocket.class);
 
   @OnMessage
   public void handleTextMessage(Session session, String message) throws IOException, InterruptedException, ExecutionException {

@@ -24,7 +24,7 @@ public class Application extends SpringBootServletInitializer {
 
   @Bean
   public ServerEndpointExporter serverEndpoint() {
-      return new ServerEndpointExporter();
+    return new ServerEndpointExporter();
   }
 
 }
